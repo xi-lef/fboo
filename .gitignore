@@ -1,0 +1,5 @@
+/*build*/
+/fboo
+
+*.pdf
+compile_commands.json

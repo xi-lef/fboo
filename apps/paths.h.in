@@ -1,0 +1,4 @@
+#cmakedefine JSON_FACTORY "@JSON_FACTORY@"
+#cmakedefine JSON_ITEM "@JSON_ITEM@"
+#cmakedefine JSON_RECIPE "@JSON_RECIPE@"
+#cmakedefine JSON_TECHNOLOGY "@JSON_TECHNOLOGY@"

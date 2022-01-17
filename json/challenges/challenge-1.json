@@ -1,0 +1,16 @@
+{
+    "initial-items":[],
+    "initial-factories":[
+        {
+            "factory-type":"player",
+            "factory-id":0,
+            "factory-name":"player"
+        }
+    ],
+    "goal-items":[
+        {
+            "name":"coal",
+            "amount":1
+        }
+    ]
+}

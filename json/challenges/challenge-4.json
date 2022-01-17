@@ -1,0 +1,29 @@
+{
+    "initial-items":[
+        {
+            "name":"burner-mining-drill",
+            "amount":1
+        },
+        {
+            "name":"stone-furnace",
+            "amount":1
+        },
+        {
+            "name":"iron-plate",
+            "amount":8
+        }
+    ],
+    "initial-factories":[
+        {
+            "factory-type":"player",
+            "factory-id":0,
+            "factory-name":"player"
+        }
+    ],
+    "goal-items":[
+        {
+            "name":"splitter",
+            "amount":100
+        }
+    ]
+}

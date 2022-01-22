@@ -2,39 +2,87 @@
 #include <utility>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 class Entity {
 public:
     Entity(std::string name) : name(name) {}
+
+    friend std::ostream& operator <<(std::ostream& os, const Entity& e);
+    virtual std::string to_string() const = 0;
 
 protected:
     std::string name;
 };
 
-class Item : Entity {};
+class Item : public Entity {
+public:
+    Item(std::string name, std::string type = "") : Entity(name), type(type) {}
 
-using ItemList = std::vector<std::pair<Item, int>>;
+    std::string to_string() const override;
 
-class Recipe : Entity {
+private:
+    std::string type;
+};
+
+class Ingredient : public Item {
+public:
+    Ingredient(std::string name = "", int amount = 0) : Item(name), amount(amount) {}
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Ingredient, name, amount);
+
+    std::string to_string() const override;
+
+private:
+    int amount;
+};
+
+using ItemList = std::vector<Ingredient>;
+
+class Recipe : public Entity {
+public:
+    Recipe(std::string name, std::string category, int energy, bool enabled,
+           ItemList ingredients, ItemList products)
+        : Entity(name), category(category), energy(energy), enabled(enabled),
+          ingredients(ingredients), products(products) {}
+
+    std::string to_string() const override;
+
 private:
     std::string category;
     int energy;  // Amount of ticks to execute the recipe.
+    bool enabled;
     ItemList ingredients, products;
 };
 
-class Factory : Entity {
+class Factory : public Entity {
 public:
     Factory(std::string name, double crafting_speed,
             std::vector<std::string> crafting_categories)
         : Entity(name), crafting_speed(crafting_speed),
           crafting_categories(crafting_categories) {}
+
+    std::string to_string() const override;
+
 private:
     double crafting_speed;
     std::vector<std::string> crafting_categories;
 };
 
-class Technology : Entity {
+class Technology : public Entity {
+public:
+    Technology(std::string name, std::vector<std::string> prerequisites,
+               ItemList ingredients, std::vector<std::string> unlocked_recipes)
+        : Entity(name), prerequisites(prerequisites), ingredients(ingredients),
+          unlocked_recipes(unlocked_recipes) {}
+
+    std::string to_string() const override;
+
 private:
-    std::vector<Technology> prerequisites;
+    // TODO union vector<string> and vector<technology>, everywhere else aswell
+    std::vector<std::string> prerequisites;
     ItemList ingredients;
-    std::vector<std::pair<std::string, std::string>> effects;
+    //std::vector<std::pair<std::string, std::string>> effects;
+    // The only effect in the json-file is "unlock-recipe", so we simplify this part.
+    std::vector<std::string> unlocked_recipes;
 };

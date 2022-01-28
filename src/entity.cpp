@@ -1,23 +1,5 @@
-#include <ranges>
-
 #include "entity.hpp"
-
-std::ostream& operator <<(std::ostream& os, const Entity& e) {
-    return os << e.to_string();
-}
-
-template<class T>
-std::ostream& operator <<(std::ostream& os, const std::vector<T>& l) {
-    if (l.empty()) {
-        return os;
-    }
-
-    os << l.front();
-    for (const auto& i : l | std::views::drop(1)) {
-        os << ", " << i;
-    }
-    return os;
-}
+#include "util.hpp"
 
 std::string Item::to_string() const {
     std::ostringstream ss;

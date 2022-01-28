@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <utility>
 #include <vector>
@@ -8,7 +9,6 @@ class Entity {
 public:
     Entity(std::string name) : name(name) {}
 
-    friend std::ostream& operator <<(std::ostream& os, const Entity& e);
     virtual std::string to_string() const = 0;
 
 protected:

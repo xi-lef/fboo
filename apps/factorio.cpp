@@ -5,6 +5,7 @@
 
 #include "fboo/entity.hpp"
 #include "paths.h"
+#include "fboo/util.hpp"
 
 using json = nlohmann::json;
 

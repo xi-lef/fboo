@@ -1,52 +1,51 @@
 #include <fstream>
 #include <iostream>
-
 #include <nlohmann/json.hpp>
+#include <unordered_map>
 
 #include "fboo/entity.hpp"
-#include "paths.h"
 #include "fboo/util.hpp"
+#include "paths.h"
 
 using json = nlohmann::json;
 
 int main(int argc, char *argv[]) {
     json factory;
     std::ifstream(JSON_FACTORY) >> factory;
-    std::vector<Factory> factories;
+    std::unordered_map<std::string, Factory> factories;
     for (const auto& [name, val] : factory.items()) {
-        //std::cout << name << val << std::endl << std::endl;
-        factories.emplace_back(name, val["crafting_speed"], val["crafting_categories"]);
+        factories.emplace(
+            std::piecewise_construct, std::forward_as_tuple(name),
+            std::forward_as_tuple(name, val["crafting_speed"], val["crafting_categories"]));
     }
 
-    //for (const auto& r : factories) { std::cout << r << std::endl; }
+    //for (const auto& [k, v] : factories) { std::cout << v << std::endl; }
 
     json item;
     std::ifstream(JSON_ITEM) >> item;
-    std::vector<Item> items;
+    std::unordered_map<std::string, Item> items;
     for (const auto& [name, val] : item.items()) {
-        //std::cout << name << val << std::endl << std::endl;
-        items.emplace_back(name, val["type"]);
+        items.emplace(std::piecewise_construct, std::forward_as_tuple(name),
+                      std::forward_as_tuple(name, val["type"]));
     }
 
-    //for (const auto& r : items) { std::cout << r << std::endl; }
+    //for (const auto& [k, v] : items) { std::cout << v << std::endl; }
 
     json recipe;
     std::ifstream(JSON_RECIPE) >> recipe;
-    std::vector<Recipe> recipes;
+    std::unordered_map<std::string, Recipe> recipes;
     for (const auto& [name, val] : recipe.items()) {
-        //std::cout << name << val << std::endl << std::endl;
-        recipes.emplace_back(name, val["category"], val["energy"], val["enabled"],
-                             val["ingredients"], val["products"]);
+        recipes.emplace(std::piecewise_construct, std::forward_as_tuple(name),
+                        std::forward_as_tuple(name, val["category"], val["energy"], val["enabled"],
+                                              val["ingredients"], val["products"]));
     }
 
-    //for (const auto& r : recipes) { std::cout << r << std::endl; }
+    //for (const auto& [k, v] : recipes) { std::cout << v << std::endl; }
 
     json technology;
     std::ifstream(JSON_TECHNOLOGY) >> technology;
-    std::vector<Technology> technologies;
+    std::unordered_map<std::string, Technology> technologies;
     for (const auto& [name, val] : technology.items()) {
-        //std::cout << name << val << std::endl << std::endl;
-
         std::vector<std::string> unlocked_recipes;
         for (const auto& e : val["effects"]) {
             if (e["type"] != "unlock-recipe") {
@@ -56,9 +55,10 @@ int main(int argc, char *argv[]) {
             unlocked_recipes.push_back(e["recipe"]);
         }
 
-        technologies.emplace_back(name, val["prerequisites"], val["ingredients"],
-                                  unlocked_recipes);
+        technologies.emplace(std::piecewise_construct, std::forward_as_tuple(name),
+                             std::forward_as_tuple(name, val["prerequisites"], val["ingredients"],
+                                                   unlocked_recipes));
     }
 
-    //for (const auto& r : technologies) { std::cout << r << std::endl; }
+    //for (const auto& [k, v] : technologies) { std::cout << v << std::endl; }
 }

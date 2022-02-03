@@ -1,13 +1,14 @@
 #pragma once
+#include <nlohmann/json.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-
 class Entity {
 public:
     Entity(std::string name) : name(name) {}
+
+    std::string get_name() const { return name; }
 
     virtual std::string to_string() const = 0;
 

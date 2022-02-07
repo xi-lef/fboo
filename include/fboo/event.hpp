@@ -15,6 +15,7 @@ public:
     Event(int timestamp) : timestamp(timestamp) {}
 
 protected:
+    std::string type = "abstract-event";
     int timestamp;
 };
 
@@ -23,9 +24,10 @@ public:
     ResearchEvent(int timestamp, std::string technology)
         : Event(timestamp), technology(technology) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResearchEvent, timestamp, technology);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResearchEvent, type, timestamp, technology);
 
 private:
+    std::string type = "research-event";
     std::string technology;
 };
 
@@ -37,9 +39,10 @@ public:
           factory_type(factory->get_name()),
           factory_name(factory->to_string()) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(BuildEvent, timestamp, factory_id, factory_type);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(BuildEvent, type, timestamp, factory_id, factory_type);
 
 private:
+    std::string type = "build-factory-event";
     int factory_id;
     std::string factory_type;
     std::string factory_name;
@@ -50,9 +53,10 @@ public:
     DestroyEvent(int timestamp, const Factory *factory)
         : Event(timestamp), factory_id(event::get_factory_id(factory)) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(DestroyEvent, timestamp, factory_id);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(DestroyEvent, type, timestamp, factory_id);
 
 private:
+    std::string type = "destroy-destroy-event";
     int factory_id;
 };
 
@@ -63,9 +67,10 @@ public:
           factory_id(event::get_factory_id(factory)),
           recipe(recipe.get_name()) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StartEvent, timestamp, factory_id, recipe);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StartEvent, type, timestamp, factory_id, recipe);
 
 private:
+    std::string type = "start-factory-event";
     int factory_id;
     std::string recipe;
 };
@@ -75,9 +80,10 @@ public:
     StopEvent(int timestamp, const Factory *factory)
         : Event(timestamp), factory_id(event::get_factory_id(factory)) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StopEvent, timestamp, factory_id);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StopEvent, type, timestamp, factory_id);
 
 private:
+    std::string type = "stop-factory-event";
     int factory_id;
 };
 
@@ -85,5 +91,8 @@ class VictoryEvent : public Event {
 public:
     VictoryEvent(int timestamp) : Event(timestamp) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(VictoryEvent, timestamp);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(VictoryEvent, type, timestamp);
+
+private:
+    std::string type = "victory-event";
 };

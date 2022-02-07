@@ -1,4 +1,5 @@
 #include "entity.hpp"
+
 #include "util.hpp"
 
 std::string Item::to_string() const {
@@ -24,8 +25,8 @@ std::string Recipe::to_string() const {
 
 std::string Factory::to_string() const {
     std::ostringstream ss;
-    ss << "Factory \"" << name << "\" can craft " << crafting_categories
-       << " at speed " << crafting_speed << std::endl;
+    ss << "Factory \"" << name << "\" can craft " << crafting_categories << " at speed "
+       << crafting_speed << std::endl;
     return ss.str();
 }
 

@@ -30,6 +30,7 @@ class Ingredient : public Item {
 public:
     Ingredient(std::string name = "", int amount = 0) : Item(name), amount(amount) {}
 
+    // Required for ItemList (below).
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Ingredient, name, amount);
 
     std::string to_string() const override;
@@ -42,10 +43,14 @@ using ItemList = std::vector<Ingredient>;
 
 class Recipe : public Entity {
 public:
-    Recipe(std::string name, std::string category, int energy, bool enabled,
-           ItemList ingredients, ItemList products)
-        : Entity(name), category(category), energy(energy), enabled(enabled),
-          ingredients(ingredients), products(products) {}
+    Recipe(std::string name, std::string category, int energy, bool enabled, ItemList ingredients,
+           ItemList products)
+        : Entity(name),
+          category(category),
+          energy(energy),
+          enabled(enabled),
+          ingredients(ingredients),
+          products(products) {}
 
     std::string to_string() const override;
 
@@ -58,10 +63,8 @@ private:
 
 class Factory : public Entity {
 public:
-    Factory(std::string name, double crafting_speed,
-            std::vector<std::string> crafting_categories)
-        : Entity(name), crafting_speed(crafting_speed),
-          crafting_categories(crafting_categories) {}
+    Factory(std::string name, double crafting_speed, std::vector<std::string> crafting_categories)
+        : Entity(name), crafting_speed(crafting_speed), crafting_categories(crafting_categories) {}
 
     std::string to_string() const override;
 
@@ -72,9 +75,11 @@ private:
 
 class Technology : public Entity {
 public:
-    Technology(std::string name, std::vector<std::string> prerequisites,
-               ItemList ingredients, std::vector<std::string> unlocked_recipes)
-        : Entity(name), prerequisites(prerequisites), ingredients(ingredients),
+    Technology(std::string name, std::vector<std::string> prerequisites, ItemList ingredients,
+               std::vector<std::string> unlocked_recipes)
+        : Entity(name),
+          prerequisites(prerequisites),
+          ingredients(ingredients),
           unlocked_recipes(unlocked_recipes) {}
 
     std::string to_string() const override;

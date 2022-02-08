@@ -9,18 +9,11 @@
 
 using json = nlohmann::json;
 
-int main(int argc, char *argv[]) {
-    json factory;
-    std::ifstream(JSON_FACTORY) >> factory;
-    std::unordered_map<std::string, Factory> factories;
-    for (const auto &[name, val] : factory.items()) {
-        factories.emplace(
-            std::piecewise_construct, std::forward_as_tuple(name),
-            std::forward_as_tuple(name, val["crafting_speed"], val["crafting_categories"]));
-    }
-
-    //for (const auto& [k, v] : factories) { std::cout << v << std::endl; }
-
+namespace {
+// Read the json-files for each type of entity and construct the appropriate C++-objects for
+// them. Return a tuple containing the unordered maps of all items, recipes, factories, and
+// technologies (in that order).
+auto init_entities() {
     json item;
     std::ifstream(JSON_ITEM) >> item;
     std::unordered_map<std::string, Item> items;
@@ -42,6 +35,17 @@ int main(int argc, char *argv[]) {
 
     //for (const auto& [k, v] : recipes) { std::cout << v << std::endl; }
 
+    json factory;
+    std::ifstream(JSON_FACTORY) >> factory;
+    std::unordered_map<std::string, Factory> factories;
+    for (const auto &[name, val] : factory.items()) {
+        factories.emplace(
+            std::piecewise_construct, std::forward_as_tuple(name),
+            std::forward_as_tuple(name, val["crafting_speed"], val["crafting_categories"]));
+    }
+
+    //for (const auto& [k, v] : factories) { std::cout << v << std::endl; }
+
     json technology;
     std::ifstream(JSON_TECHNOLOGY) >> technology;
     std::unordered_map<std::string, Technology> technologies;
@@ -61,4 +65,17 @@ int main(int argc, char *argv[]) {
     }
 
     //for (const auto& [k, v] : technologies) { std::cout << v << std::endl; }
+
+    return std::tuple(items, recipes, factories, technologies);
+}
+}  // namespace
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        std::cerr << "usage: " << argv[0] << " target.json" << std::endl;
+        return EXIT_FAILURE;
+    }
+    auto target = std::ifstream(argv[1]);
+
+    auto [items, recipes, factories, technologies] = init_entities();
 }

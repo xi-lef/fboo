@@ -26,6 +26,8 @@ private:
     std::string type;
 };
 
+using ItemMap = std::unordered_map<std::string, Item>;
+
 class Ingredient : public Item {
 public:
     Ingredient(std::string name = "", int amount = 0) : Item(name), amount(amount) {}
@@ -61,6 +63,8 @@ private:
     ItemList ingredients, products;
 };
 
+using RecipeMap = std::unordered_map<std::string, Recipe>;
+
 class Factory : public Entity {
 public:
     Factory(std::string name, double crafting_speed, std::vector<std::string> crafting_categories)
@@ -72,6 +76,8 @@ private:
     double crafting_speed;
     std::vector<std::string> crafting_categories;
 };
+
+using FactoryMap = std::unordered_map<std::string, Factory>;
 
 class Technology : public Entity {
 public:
@@ -85,10 +91,11 @@ public:
     std::string to_string() const override;
 
 private:
-    // TODO union vector<string> and vector<technology>, everywhere else aswell
     std::vector<std::string> prerequisites;
     ItemList ingredients;
     //std::vector<std::pair<std::string, std::string>> effects;
     // The only effect in the json-file is "unlock-recipe", so we simplify this part.
     std::vector<std::string> unlocked_recipes;
 };
+
+using TechnologyMap = std::unordered_map<std::string, Technology>;

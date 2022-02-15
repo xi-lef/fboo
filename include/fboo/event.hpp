@@ -64,7 +64,8 @@ public:
           factory_type(factory->get_name()),
           factory_name(factory->to_string()) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(BuildEvent, type, timestamp, factory_id, factory_type);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(BuildEvent, type, timestamp, factory_id,
+                                   factory_type);
 
     inline static std::string type = "build-factory-event";
 
@@ -92,7 +93,8 @@ public:
         : FactoryEvent(timestamp, event::factory_to_id(factory)),
           recipe(recipe.get_name()) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StartEvent, type, timestamp, factory_id, recipe);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StartEvent, type, timestamp, factory_id,
+                                   recipe);
 
     std::string get_recipe() const { return recipe; }
 

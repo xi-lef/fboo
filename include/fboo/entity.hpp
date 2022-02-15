@@ -33,7 +33,8 @@ using ItemMap = std::unordered_map<std::string, Item>;
 
 class Ingredient : public Item {
 public:
-    Ingredient(std::string name = "", int amount = 0) : Item(name), amount(amount) {}
+    Ingredient(std::string name = "", int amount = 0)
+        : Item(name), amount(amount) {}
 
     // Required for ItemList (below).
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Ingredient, name, amount);
@@ -49,8 +50,8 @@ using ItemList = std::vector<Ingredient>;
 
 class Recipe : public Entity {
 public:
-    Recipe(std::string name, std::string category, int energy, bool enabled, ItemList ingredients,
-           ItemList products)
+    Recipe(std::string name, std::string category, int energy, bool enabled,
+           ItemList ingredients, ItemList products)
         : Entity(name),
           category(category),
           energy(energy),
@@ -79,8 +80,11 @@ using RecipeMap = std::unordered_map<std::string, Recipe>;
 
 class Factory : public Entity {
 public:
-    Factory(std::string name, double crafting_speed, std::vector<std::string> crafting_categories)
-        : Entity(name), crafting_speed(crafting_speed), crafting_categories(crafting_categories) {}
+    Factory(std::string name, double crafting_speed,
+            std::vector<std::string> crafting_categories)
+        : Entity(name),
+          crafting_speed(crafting_speed),
+          crafting_categories(crafting_categories) {}
 
     std::string to_string() const override;
     double get_crafting_speed() const { return crafting_speed; }
@@ -97,8 +101,8 @@ using FactoryMap = std::unordered_map<std::string, Factory>;
 
 class Technology : public Entity {
 public:
-    Technology(std::string name, std::vector<std::string> prerequisites, ItemList ingredients,
-               std::vector<std::string> unlocked_recipes)
+    Technology(std::string name, std::vector<std::string> prerequisites,
+               ItemList ingredients, std::vector<std::string> unlocked_recipes)
         : Entity(name),
           prerequisites(prerequisites),
           ingredients(ingredients),
@@ -114,7 +118,8 @@ public:
 private:
     std::vector<std::string> prerequisites;
     ItemList ingredients;
-    // The only effect in the json-file is "unlock-recipe", so we simplify this part.
+    // The only effect in the json-file is "unlock-recipe", so we simplify this
+    // part.
     std::vector<std::string> unlocked_recipes;
 };
 

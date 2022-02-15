@@ -68,6 +68,9 @@ public:
 
     inline static std::string type = "build-factory-event";
 
+    std::string get_factory_type() const { return factory_type; }
+    std::string get_factory_name() const { return factory_name; }
+
 private:
     std::string factory_type;
     std::string factory_name;

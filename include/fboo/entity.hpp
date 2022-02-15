@@ -11,9 +11,8 @@ public:
     // TODO fine? maybe bad for e.g. factory or item?
     virtual bool operator==(const Entity &o) const { return name == o.name; }
 
-    std::string get_name() const { return name; }
-
     virtual std::string to_string() const = 0;
+    std::string get_name() const { return name; }
 
 protected:
     std::string name;
@@ -24,6 +23,7 @@ public:
     Item(std::string name, std::string type = "") : Entity(name), type(type) {}
 
     std::string to_string() const override;
+    std::string get_type() const { return type; }
 
 private:
     std::string type;
@@ -59,12 +59,13 @@ public:
           products(products) {}
 
     std::string to_string() const override;
-
+    std::string get_category() const { return category; }
     bool is_enabled() const { return enabled; }
     int get_energy() const { return energy; }
+    ItemList get_ingredients() const { return ingredients; }
     ItemList get_products() const { return products; }
-    void set_energy(int e) { energy = e; }
 
+    void set_energy(int e) { energy = e; }
     int tick() { return --energy; }
 
 private:
@@ -82,9 +83,14 @@ public:
         : Entity(name), crafting_speed(crafting_speed), crafting_categories(crafting_categories) {}
 
     std::string to_string() const override;
+    double get_crafting_speed() const { return crafting_speed; }
+    std::vector<std::string> get_crafting_categories() const {
+        return crafting_categories;
+    }
 
-    const double crafting_speed;
-    const std::vector<std::string> crafting_categories;
+private:
+    double crafting_speed;
+    std::vector<std::string> crafting_categories;
 };
 
 using FactoryMap = std::unordered_map<std::string, Factory>;
@@ -99,12 +105,17 @@ public:
           unlocked_recipes(unlocked_recipes) {}
 
     std::string to_string() const override;
+    std::vector<std::string> get_prerequisites() const { return prerequisites; }
+    ItemList get_ingredients() const { return ingredients; }
+    std::vector<std::string> get_unlocked_recipes() const {
+        return unlocked_recipes;
+    }
 
-    const std::vector<std::string> prerequisites;
-    const ItemList ingredients;
-    //std::vector<std::pair<std::string, std::string>> effects;
+private:
+    std::vector<std::string> prerequisites;
+    ItemList ingredients;
     // The only effect in the json-file is "unlock-recipe", so we simplify this part.
-    const std::vector<std::string> unlocked_recipes;
+    std::vector<std::string> unlocked_recipes;
 };
 
 using TechnologyMap = std::unordered_map<std::string, Technology>;

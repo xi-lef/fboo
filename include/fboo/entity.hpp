@@ -8,6 +8,9 @@ class Entity {
 public:
     Entity(std::string name) : name(name) {}
 
+    // TODO fine? maybe bad for e.g. factory or item?
+    virtual bool operator==(const Entity &o) const { return name == o.name; }
+
     std::string get_name() const { return name; }
 
     virtual std::string to_string() const = 0;
@@ -36,6 +39,7 @@ public:
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Ingredient, name, amount);
 
     std::string to_string() const override;
+    int get_amount() const { return amount; }
 
 private:
     int amount;
@@ -56,6 +60,13 @@ public:
 
     std::string to_string() const override;
 
+    bool is_enabled() const { return enabled; }
+    int get_energy() const { return energy; }
+    ItemList get_products() const { return products; }
+    void set_energy(int e) { energy = e; }
+
+    int tick() { return --energy; }
+
 private:
     std::string category;
     int energy;  // Amount of ticks to execute the recipe.
@@ -72,9 +83,8 @@ public:
 
     std::string to_string() const override;
 
-private:
-    double crafting_speed;
-    std::vector<std::string> crafting_categories;
+    const double crafting_speed;
+    const std::vector<std::string> crafting_categories;
 };
 
 using FactoryMap = std::unordered_map<std::string, Factory>;
@@ -90,12 +100,11 @@ public:
 
     std::string to_string() const override;
 
-private:
-    std::vector<std::string> prerequisites;
-    ItemList ingredients;
+    const std::vector<std::string> prerequisites;
+    const ItemList ingredients;
     //std::vector<std::pair<std::string, std::string>> effects;
     // The only effect in the json-file is "unlock-recipe", so we simplify this part.
-    std::vector<std::string> unlocked_recipes;
+    const std::vector<std::string> unlocked_recipes;
 };
 
 using TechnologyMap = std::unordered_map<std::string, Technology>;

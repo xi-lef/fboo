@@ -1,4 +1,4 @@
-add_library(factorio entity.cpp event.cpp)
+add_library(factorio entity.cpp event.cpp game.cpp)
 
 target_include_directories(
   factorio

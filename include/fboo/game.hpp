@@ -4,6 +4,7 @@
 #include <ranges>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "entity.hpp"
@@ -11,33 +12,28 @@
 
 namespace game {
 
-// TODO big meh
-struct ActiveRecipe : Recipe {
-    ActiveRecipe(const Recipe &r, event::fid_t fid) : Recipe(r), fid(fid) {}
-    event::fid_t fid;
-};
-
 class State {
 public:
     State(std::vector<Recipe> all_recipes);
 
     void add_item(const Ingredient &ingredient);
-    void add_item(const std::string &name, int amount);
+    void add_item(const std::string &name, int amount = 1);
     void add_items(const ItemList &list);
+    void remove_item(const std::string &name, int amount = 1);
     void remove_items(const ItemList &list);
 
     bool is_unlocked(const Technology &technology) const;
     void unlock_technology(const Technology &technology,
                            const RecipeMap &recipe_map);
 
-    friend class Simulation;
+    void add_factory(event::fid_t fid);
+    void remove_factory(event::fid_t fid);
 
 private:
     std::unordered_map<std::string, int> items;
-    std::vector<ActiveRecipe> active_recipes;  // TODO mpstubs like queue?
+    std::unordered_set<event::fid_t> factories;
 
     std::vector<Recipe> available_recipes;
-    std::vector<Factory> available_factories;
     std::vector<Technology> unlocked_technologies;
 };
 
@@ -59,12 +55,15 @@ public:
     long long simulate();
 
 private:
+    bool cancel_recipe(event::fid_t fid);
+
     bool advance(std::vector<Event> cur_events);
 
     long long tick = -1;
     State state;
     std::vector<Ingredient> goals;
     std::deque<Event> events;  // TODO Event* ?
+    std::unordered_map<event::fid_t, Recipe> active_recipes;
 
     const ItemMap all_items;
     const RecipeMap all_recipes;

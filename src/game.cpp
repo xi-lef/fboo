@@ -7,7 +7,7 @@
 
 namespace game {
 
-using event::fid_t;
+using namespace event;
 
 State::State(std::vector<Recipe> all_recipes) {
     for (const auto &r : all_recipes) {
@@ -34,6 +34,10 @@ void State::add_items(const ItemList &list) {
     }
 }
 
+void State::remove_item(const std::string &name, int amount) {
+    add_item(name, -amount);
+}
+
 void State::remove_items(const ItemList &list) {
     for (const auto &ingredient : list) {
         add_item(ingredient.get_name(), -ingredient.get_amount());
@@ -53,6 +57,24 @@ void State::unlock_technology(const Technology &technology,
     for (const std::string &s : technology.get_unlocked_recipes()) {
         available_recipes.push_back(recipe_map.at(s));
     }
+}
+
+void State::add_factory(fid_t fid) {
+    factories.insert(fid);
+}
+
+void State::remove_factory(fid_t fid) {
+    factories.erase(fid);
+}
+
+bool Simulation::cancel_recipe(fid_t fid) {
+    auto search = active_recipes.find(fid);
+    if (search == active_recipes.end()) {
+        return false;
+    }
+    state.add_items(search->second.get_ingredients());
+    active_recipes.erase(search);
+    return true;
 }
 
 long long Simulation::simulate() {
@@ -98,26 +120,23 @@ bool Simulation::advance(std::vector<Event> cur_events) {
     }
 
     // Step 3: finish recipes.
-    size_t removed = 0;
-    for (ActiveRecipe &r : state.active_recipes) {
+    std::vector<fid_t> finished_factories;
+    for (auto &[fid, r] : active_recipes) {
         if (r.tick() == 0) {
             state.add_items(r.get_products());
-            ++removed;
+            finished_factories.push_back(fid);
         }
     }
-    for (size_t i = 0; i < removed; ++i) {
-        std::ranges::pop_heap(state.active_recipes, {},
-                              &ActiveRecipe::get_energy);
-        state.active_recipes.pop_back();
+    for (fid_t fid : finished_factories) {
+        active_recipes.erase(fid);
     }
-    // TODO verify correctness (because of heap)
 
     // Step 4: execute research events.
-    for (const ResearchEvent &e : research_events) {
+    for (const auto &e : research_events) {
         const Technology &technology = all_technologies.at(e.get_technology());
         for (const std::string &prerequisite : technology.get_prerequisites()) {
             if (!state.is_unlocked(all_technologies.at(prerequisite))) {
-                return false;  // TODO exception?
+                throw std::logic_error("prerequisite not yet unlocked");
             }
         }
 
@@ -125,19 +144,37 @@ bool Simulation::advance(std::vector<Event> cur_events) {
     }
 
     // Step 5: execute stop factory events.
-    for (const StopEvent &e : extract_subclass<StopEvent>(other_events)) {
+    for (const auto &e : extract_subclass<StopEvent>(other_events)) {
+        fid_t fid = e.get_factory_id();
+        cancel_recipe(fid);
+    }
+
+    // Step 6: execute destroy factory events.
+    for (const auto &e : extract_subclass<DestroyEvent>(other_events)) {
+        fid_t fid = e.get_factory_id();
+        cancel_recipe(fid);
+        state.remove_factory(fid);
+        state.add_item(id_to_factory(fid)->get_name());
+    }
+
+    // Step 7: handle victory event TODO
+
+    // Step 8: Handle build factory events
+    for (const auto &e : extract_subclass<BuildEvent>(other_events)) {
+        state.remove_item(e.get_factory_type());
+        // TODO ID? mhm
     }
 
     // Step 9: execute start factory events.
-    for (const StartEvent &e : extract_subclass<StartEvent>(other_events)) {
-        Recipe r = all_recipes.at(e.get_recipe());
+    for (const auto &e : extract_subclass<StartEvent>(other_events)) {
         fid_t fid = e.get_factory_id();
-        double crafting_speed = event::id_to_factory(fid)->get_crafting_speed();
+        cancel_recipe(fid);
+
+        Recipe r = all_recipes.at(e.get_recipe());
+        double crafting_speed = id_to_factory(fid)->get_crafting_speed();
         r.set_energy(std::ceil(r.get_energy() / crafting_speed));
 
-        state.active_recipes.push_back(ActiveRecipe(r, fid));
-        std::ranges::push_heap(state.active_recipes, {},
-                               &ActiveRecipe::get_energy);
+        active_recipes.insert({fid, r});
     }
 
     return true;

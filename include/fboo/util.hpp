@@ -25,3 +25,13 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &l) {
     }
     return os;
 }
+
+template <class Subclass, std::ranges::range It>
+auto extract_subclass(const It &orig) {
+    return orig | std::views::filter([](const auto &e) {
+               //return e.get_type() == Target::type;
+               return dynamic_cast<const Subclass *>(&e);
+           })
+           | std::views::transform(
+               [](const auto &e) { return dynamic_cast<const Subclass &>(e); });
+}

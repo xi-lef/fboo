@@ -27,8 +27,8 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &l) {
 }
 
 template <class Subclass, std::ranges::range It>
-auto extract_subclass(const It &orig) {
-    return orig | std::views::filter([](const auto &e) {
+auto extract_subclass(const It &it) {
+    return it | std::views::filter([](const auto &e) {
                //return e.get_type() == Target::type;
                return dynamic_cast<const Subclass *>(&e);
            })

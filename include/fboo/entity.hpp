@@ -20,7 +20,8 @@ protected:
 
 class Item : public Entity {
 public:
-    Item(std::string name, std::string type = "") : Entity(name), type(type) {}
+    explicit Item(std::string name, std::string type = "")
+        : Entity(name), type(type) {}
 
     std::string to_string() const override;
     std::string get_type() const { return type; }
@@ -33,7 +34,7 @@ using ItemMap = std::unordered_map<std::string, Item>;
 
 class Ingredient : public Item {
 public:
-    Ingredient(std::string name = "", int amount = 0)
+    explicit Ingredient(std::string name = "", int amount = 0)
         : Item(name), amount(amount) {}
 
     // Required for ItemList (below).

@@ -1,6 +1,5 @@
 #pragma once
 #include <deque>
-#include <queue>
 #include <ranges>
 #include <string>
 #include <unordered_map>
@@ -16,6 +15,8 @@ class State {
 public:
     State(std::vector<Recipe> all_recipes);
 
+    bool has_item(const Ingredient &ingredient) const;
+    bool has_items(const ItemList &list) const;
     void add_item(const Ingredient &ingredient);
     void add_item(const std::string &name, int amount = 1);
     void add_items(const ItemList &list);
@@ -63,7 +64,8 @@ private:
     State state;
     std::vector<Ingredient> goals;
     std::deque<Event> events;  // TODO Event* ?
-    std::unordered_map<event::fid_t, Recipe> active_recipes;
+    std::unordered_map<event::fid_t, Recipe> active_factories;
+    std::map<event::fid_t, Recipe> starved_factories;
 
     const ItemMap all_items;
     const RecipeMap all_recipes;

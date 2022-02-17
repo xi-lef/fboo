@@ -17,6 +17,19 @@ State::State(std::vector<Recipe> all_recipes) {
     }
 }
 
+bool State::has_item(const Ingredient &ingredient) const {
+    return items.at(ingredient.get_name()) >= ingredient.get_amount();
+}
+
+bool State::has_items(const ItemList &list) const {
+    for (const auto &i : list) {
+        if (!has_item(i)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void State::add_item(const Ingredient &ingredient) {
     add_item(ingredient.get_name(), ingredient.get_amount());
 }
@@ -68,17 +81,17 @@ void State::remove_factory(fid_t fid) {
 }
 
 bool Simulation::cancel_recipe(fid_t fid) {
-    auto search = active_recipes.find(fid);
-    if (search == active_recipes.end()) {
+    auto search = active_factories.find(fid);
+    if (search == active_factories.end()) {
         return false;
     }
     state.add_items(search->second.get_ingredients());
-    active_recipes.erase(search);
+    active_factories.erase(search);
     return true;
 }
 
 long long Simulation::simulate() {
-    std::sort(events.begin(), events.end());
+    std::ranges::sort(events, {}, &Event::get_timestamp);
 
     while (!goals.empty()) {
         std::vector<Event> cur_events;
@@ -121,14 +134,15 @@ bool Simulation::advance(std::vector<Event> cur_events) {
 
     // Step 3: finish recipes.
     std::vector<fid_t> finished_factories;
-    for (auto &[fid, r] : active_recipes) {
+    for (auto &[fid, r] : active_factories) {
         if (r.tick() == 0) {
             state.add_items(r.get_products());
             finished_factories.push_back(fid);
+            starved_factories.insert({fid, r});  // Gather for step 10.
         }
     }
     for (fid_t fid : finished_factories) {
-        active_recipes.erase(fid);
+        active_factories.erase(fid);
     }
 
     // Step 4: execute research events.
@@ -174,7 +188,27 @@ bool Simulation::advance(std::vector<Event> cur_events) {
         double crafting_speed = id_to_factory(fid)->get_crafting_speed();
         r.set_energy(std::ceil(r.get_energy() / crafting_speed));
 
-        active_recipes.insert({fid, r});
+        active_factories.insert({fid, r});
+        starved_factories.insert({fid, r});  // Gather for step 10.
+    }
+
+    // Step 10: handle starved factories.
+    std::vector<fid_t> satisfied_factories;
+    for (auto [fid, r] : starved_factories) {
+        const ItemList &ings = r.get_ingredients();
+        if (state.has_items(ings)) {
+            state.remove_items(ings);
+            double crafting_speed = id_to_factory(fid)->get_crafting_speed();
+            // r.energy is 0, so we need to get the actual required energy from
+            // all_recipes.
+            r.set_energy(std::ceil(all_recipes.at(r.get_name()).get_energy()
+                                   / crafting_speed));
+            active_factories.insert({fid, r});
+            satisfied_factories.push_back(fid);
+        }
+    }
+    for (fid_t fid : satisfied_factories) {
+        starved_factories.erase(fid);
     }
 
     return true;

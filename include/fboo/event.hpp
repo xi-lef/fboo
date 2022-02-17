@@ -24,7 +24,6 @@ public:
 
     virtual std::string get_type() const { return type; }
     int get_timestamp() const { return timestamp; }
-    bool operator<(const Event &o) const { return timestamp < o.timestamp; }
 
 protected:
     inline static std::string type = "abstract-event";

@@ -168,15 +168,19 @@ bool Simulation::advance(std::vector<Event> cur_events) {
         fid_t fid = e.get_factory_id();
         cancel_recipe(fid);
         state.remove_factory(fid);
-        state.add_item(id_to_factory(fid)->get_name());
+        Factory *f = id_to_factory(fid);
+        state.add_item(f->get_name());
+        delete f;
     }
 
     // Step 7: handle victory event TODO
 
     // Step 8: Handle build factory events
     for (const auto &e : extract_subclass<BuildEvent>(other_events)) {
-        state.remove_item(e.get_factory_type());
-        // TODO ID? mhm
+        const std::string &name = e.get_factory_type();
+        state.remove_item(name);
+        Factory *f = new Factory(all_factories.at(name));
+        state.add_factory(factory_to_id(f));
     }
 
     // Step 9: execute start factory events.

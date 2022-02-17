@@ -8,9 +8,6 @@ class Entity {
 public:
     Entity(std::string name) : name(name) {}
 
-    // TODO fine? maybe bad for e.g. factory or item?
-    virtual bool operator==(const Entity &o) const { return name == o.name; }
-
     virtual std::string to_string() const = 0;
     std::string get_name() const { return name; }
 
@@ -108,6 +105,8 @@ public:
           prerequisites(prerequisites),
           ingredients(ingredients),
           unlocked_recipes(unlocked_recipes) {}
+
+    bool operator==(const Entity &o) const { return name == o.get_name(); }
 
     std::string to_string() const override;
     std::vector<std::string> get_prerequisites() const { return prerequisites; }

@@ -124,3 +124,35 @@ private:
 };
 
 using TechnologyMap = std::unordered_map<std::string, Technology>;
+
+class FactoryIdMap {
+public:
+    using fid_t = int; // TODO style guide, where?
+    FactoryIdMap() {}
+
+    fid_t insert(const Factory *f) {
+        insert_checked(f, count);
+        return count++;
+    }
+    fid_t insert(const Factory *f, fid_t fid) {
+        insert_checked(f, fid);
+        return fid;
+    }
+    const Factory *erase(fid_t fid) {
+        const Factory *f = map.at(fid);
+        map.erase(fid);
+        return f;
+    }
+
+    const Factory *operator[](fid_t fid) const { return map.at(fid); }
+
+private:
+    void insert_checked(const Factory *f, fid_t fid) {
+        if (!map.insert({count, f}).second) {
+            throw std::logic_error("factory id was used twice");
+        }
+    }
+
+    fid_t count;
+    std::unordered_map<fid_t, const Factory *> map;
+};

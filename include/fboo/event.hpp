@@ -4,20 +4,6 @@
 
 #include "entity.hpp"
 
-namespace event {
-
-using fid_t = uintptr_t;
-
-inline fid_t factory_to_id(const Factory *factory) {
-    return static_cast<fid_t>(reinterpret_cast<uintptr_t>(factory));
-}
-
-inline Factory *id_to_factory(fid_t fid) {
-    return reinterpret_cast<Factory *>(fid);
-}
-
-}  // namespace event
-
 class Event {
 public:
     Event(int timestamp) : timestamp(timestamp) {}
@@ -49,25 +35,26 @@ private:
 
 class FactoryEvent : public Event {
 public:
-    FactoryEvent(int timestamp, event::fid_t factory_id)
+    FactoryEvent(int timestamp, FactoryIdMap::fid_t factory_id)
         : Event(timestamp), factory_id(factory_id) {}
 
     virtual std::string to_string() const override;
-    event::fid_t get_factory_id() const { return factory_id; }
+    FactoryIdMap::fid_t get_factory_id() const { return factory_id; }
 
 protected:
-    event::fid_t factory_id;
+    FactoryIdMap::fid_t factory_id;
 };
 
 class BuildEvent : public FactoryEvent {
 public:
     BuildEvent(int timestamp, std::string type, std::string name,
-               event::fid_t factory_id)
+               FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id),
           factory_type(type),
           factory_name(name) {}
 
-    BuildEvent(int timestamp, const Factory &factory, event::fid_t factory_id)
+    BuildEvent(int timestamp, const Factory &factory,
+               FactoryIdMap::fid_t factory_id)
         : BuildEvent(timestamp, factory.get_name(), factory.to_string(),
                      factory_id) {}
 
@@ -88,7 +75,7 @@ private:
 
 class DestroyEvent : public FactoryEvent {
 public:
-    DestroyEvent(int timestamp, event::fid_t factory_id)
+    DestroyEvent(int timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(DestroyEvent, type, timestamp, factory_id);
@@ -100,10 +87,12 @@ public:
 
 class StartEvent : public FactoryEvent {
 public:
-    StartEvent(int timestamp, event::fid_t factory_id, const Recipe &recipe)
+    StartEvent(int timestamp, FactoryIdMap::fid_t factory_id,
+               const Recipe &recipe)
         : StartEvent(timestamp, factory_id, recipe.get_name()) {}
 
-    StartEvent(int timestamp, event::fid_t factory_id, std::string recipe)
+    StartEvent(int timestamp, FactoryIdMap::fid_t factory_id,
+               std::string recipe)
         : FactoryEvent(timestamp, factory_id), recipe(recipe) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(StartEvent, type, timestamp, factory_id,
@@ -121,7 +110,7 @@ private:
 
 class StopEvent : public FactoryEvent {
 public:
-    StopEvent(int timestamp, event::fid_t factory_id)
+    StopEvent(int timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(StopEvent, type, timestamp, factory_id);

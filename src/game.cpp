@@ -7,7 +7,7 @@
 
 namespace game {
 
-using namespace event;
+using fid_t = FactoryIdMap::fid_t;
 
 State::State(std::vector<Recipe> all_recipes) {
     for (const auto &r : all_recipes) {
@@ -72,12 +72,19 @@ void State::unlock_technology(const Technology &technology,
     }
 }
 
-void State::add_factory(fid_t fid) {
-    factories.insert(fid);
+// TODO semantic with arg is weird, copied in build but deleted in destroy?
+const Factory *State::build_factory(const Factory *f, bool consume) {
+    if (consume) {
+        remove_item(f->get_name());
+    }
+    factories.insert(new Factory(*f));
+    return f;
 }
 
-void State::remove_factory(fid_t fid) {
-    factories.erase(fid);
+void State::destroy_factory(const Factory *f) {
+    factories.erase(f);
+    add_item(f->get_name());
+    delete f;
 }
 
 bool Simulation::cancel_recipe(fid_t fid) {
@@ -88,6 +95,12 @@ bool Simulation::cancel_recipe(fid_t fid) {
     state.add_items(search->second.get_ingredients());
     active_factories.erase(search);
     return true;
+}
+
+void Simulation::build_factory(const BuildEvent &e, bool consume) {
+    const Factory *f
+        = state.build_factory(&all_factories.at(e.get_factory_type()), consume);
+    factory_id_map.insert(f, e.get_factory_id());
 }
 
 long long Simulation::simulate() {
@@ -167,20 +180,14 @@ bool Simulation::advance(std::vector<Event> cur_events) {
     for (const auto &e : extract_subclass<DestroyEvent>(other_events)) {
         fid_t fid = e.get_factory_id();
         cancel_recipe(fid);
-        state.remove_factory(fid);
-        Factory *f = id_to_factory(fid);
-        state.add_item(f->get_name());
-        delete f;
+        state.destroy_factory(factory_id_map.erase(fid));
     }
 
-    // Step 7: handle victory event TODO
+    // Step 7: handle victory event. TODO
 
-    // Step 8: Handle build factory events
+    // Step 8: Handle build factory events.
     for (const auto &e : extract_subclass<BuildEvent>(other_events)) {
-        const std::string &name = e.get_factory_type();
-        state.remove_item(name);
-        Factory *f = new Factory(all_factories.at(name));
-        state.add_factory(factory_to_id(f));
+        build_factory(e);
     }
 
     // Step 9: execute start factory events.
@@ -189,22 +196,23 @@ bool Simulation::advance(std::vector<Event> cur_events) {
         cancel_recipe(fid);
 
         Recipe r = all_recipes.at(e.get_recipe());
-        double crafting_speed = id_to_factory(fid)->get_crafting_speed();
-        r.set_energy(std::ceil(r.get_energy() / crafting_speed));
+        // TODO rm?
+        //double crafting_speed = id_to_factory(fid)->get_crafting_speed();
+        //r.set_energy(std::ceil(r.get_energy() / crafting_speed));
 
-        active_factories.insert({fid, r});
+        // TODO don't add to active_factories, correct?
         starved_factories.insert({fid, r});  // Gather for step 10.
     }
 
-    // Step 10: handle starved factories.
+    // Step 10: handle starved factories by starting production if possible.
     std::vector<fid_t> satisfied_factories;
     for (auto [fid, r] : starved_factories) {
         const ItemList &ings = r.get_ingredients();
         if (state.has_items(ings)) {
             state.remove_items(ings);
-            double crafting_speed = id_to_factory(fid)->get_crafting_speed();
+            double crafting_speed = factory_id_map[fid]->get_crafting_speed();
             // r.energy is 0, so we need to get the actual required energy from
-            // all_recipes.
+            // all_recipes. TODO meh
             r.set_energy(std::ceil(all_recipes.at(r.get_name()).get_energy()
                                    / crafting_speed));
             active_factories.insert({fid, r});

@@ -27,12 +27,12 @@ public:
     void unlock_technology(const Technology &technology,
                            const RecipeMap &recipe_map);
 
-    void add_factory(event::fid_t fid);
-    void remove_factory(event::fid_t fid);
+    const Factory *build_factory(const Factory *factory, bool consume = true);
+    void destroy_factory(const Factory *factory);
 
 private:
     std::unordered_map<std::string, int> items;
-    std::unordered_set<event::fid_t> factories;
+    std::unordered_set<const Factory *> factories;
 
     std::vector<Recipe> available_recipes;
     std::vector<Technology> unlocked_technologies;
@@ -56,7 +56,9 @@ public:
     long long simulate();
 
 private:
-    bool cancel_recipe(event::fid_t fid);
+    // Does nothing if "fid" is not a known factory.
+    bool cancel_recipe(FactoryIdMap::fid_t fid);
+    void build_factory(const BuildEvent &e, bool consume = true);
 
     bool advance(std::vector<Event> cur_events);
 
@@ -64,8 +66,10 @@ private:
     State state;
     std::vector<Ingredient> goals;
     std::deque<Event> events;  // TODO Event* ?
-    std::unordered_map<event::fid_t, Recipe> active_factories;
-    std::map<event::fid_t, Recipe> starved_factories;
+    // TODO mv these two to state?
+    std::unordered_map<FactoryIdMap::fid_t, Recipe> active_factories;
+    std::map<FactoryIdMap::fid_t, Recipe> starved_factories;
+    FactoryIdMap factory_id_map;
 
     const ItemMap all_items;
     const RecipeMap all_recipes;

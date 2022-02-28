@@ -12,7 +12,7 @@ using fid_t = FactoryIdMap::fid_t;
 State::State(std::vector<Recipe> all_recipes) {
     for (const auto &r : all_recipes) {
         if (r.is_enabled()) {
-            available_recipes.push_back(r);
+            unlocked_recipes.insert(&r);
         }
     }
 }
@@ -57,18 +57,20 @@ void State::remove_items(const ItemList &list) {
     }
 }
 
+bool State::is_unlocked(const Recipe &recipe) const {
+    return unlocked_recipes.contains(&recipe);
+}
+
 bool State::is_unlocked(const Technology &technology) const {
-    return std::find(unlocked_technologies.begin(), unlocked_technologies.end(),
-                     technology)
-           != unlocked_technologies.end();
+    return unlocked_technologies.contains(&technology);
 }
 
 void State::unlock_technology(const Technology &technology,
                               const RecipeMap &recipe_map) {
     remove_items(technology.get_ingredients());
-    unlocked_technologies.push_back(technology);
+    unlocked_technologies.insert(&technology);
     for (const std::string &s : technology.get_unlocked_recipes()) {
-        available_recipes.push_back(recipe_map.at(s));
+        unlocked_recipes.insert(&recipe_map.at(s));
     }
 }
 
@@ -121,8 +123,7 @@ long long Simulation::simulate() {
 bool Simulation::advance(std::vector<Event> cur_events) {
     // Step 1: increment timestamp.
     if (++tick > (1ll << 40)) {
-        std::cerr << "game duration exceeded 2^40, aborting" << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::logic_error("game duration exceeded 2^40, aborting");
     }
 
     // Step 2: group and sort events.
@@ -132,6 +133,7 @@ bool Simulation::advance(std::vector<Event> cur_events) {
         auto mid = std::partition(
             cur_events.begin(), cur_events.end(),
             [](const Event &e) { return e.get_type() == ResearchEvent::type; });
+            //[](const Event &e) { return dynamic_cast<const ResearchEvent *>(&e); });
         std::transform(
             cur_events.begin(), mid, std::back_inserter(research_events),
             [](Event &e) { return dynamic_cast<ResearchEvent &>(e); });
@@ -195,6 +197,9 @@ bool Simulation::advance(std::vector<Event> cur_events) {
         fid_t fid = e.get_factory_id();
         cancel_recipe(fid);
 
+        if (!state.is_unlocked(all_recipes.at(e.get_recipe()))) {
+            throw std::logic_error("recipe not yet unlocked");
+        }
         Recipe r = all_recipes.at(e.get_recipe());
         // TODO rm?
         //double crafting_speed = id_to_factory(fid)->get_crafting_speed();

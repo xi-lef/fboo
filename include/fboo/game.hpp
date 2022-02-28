@@ -23,6 +23,7 @@ public:
     void remove_item(const std::string &name, int amount = 1);
     void remove_items(const ItemList &list);
 
+    bool is_unlocked(const Recipe &recipe) const;
     bool is_unlocked(const Technology &technology) const;
     void unlock_technology(const Technology &technology,
                            const RecipeMap &recipe_map);
@@ -34,23 +35,24 @@ private:
     std::unordered_map<std::string, int> items;
     std::unordered_set<const Factory *> factories;
 
-    std::vector<Recipe> available_recipes;
-    std::vector<Technology> unlocked_technologies;
+    // TODO pointers? technologies and recipes are kinda singletons
+    std::unordered_set<const Recipe *> unlocked_recipes;
+    std::unordered_set<const Technology *> unlocked_technologies;
 };
 
 class Simulation {
 public:
     Simulation(const ItemMap &all_items, const RecipeMap &all_recipes,
                const FactoryMap &all_factories,
-               const TechnologyMap &all_technologies, std::deque<Event> events,
-               std::vector<Ingredient> goals)
+               const TechnologyMap &all_technologies, std::vector<Event> events,
+               ItemList goals)
         : all_items(all_items),
           all_recipes(all_recipes),
           all_factories(all_factories),
           all_technologies(all_technologies),
           state(std::vector(std::views::values(all_recipes).begin(),
                             std::views::values(all_recipes).end())),
-          events(events),
+          events(events.begin(), events.end()),
           goals(goals) {}
 
     long long simulate();
@@ -64,7 +66,7 @@ private:
 
     long long tick = -1;
     State state;
-    std::vector<Ingredient> goals;
+    ItemList goals; // TODO map?
     std::deque<Event> events;  // TODO Event* ?
     // TODO mv these two to state?
     std::unordered_map<FactoryIdMap::fid_t, Recipe> active_factories;

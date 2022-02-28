@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -euo pipefail
+set -eu
 
 build_dir='.build'
 
@@ -12,6 +12,6 @@ if which bear 2> /dev/null 1>&2 && [ ! -r compile_commands.json ]; then
     prefix='bear --'
 fi
 
-${prefix:-} cmake --build $build_dir -j $(nproc)
+${prefix:-} cmake --build $build_dir -j "$(nproc)"
 
 ln -fs $build_dir/apps/fboo

@@ -1,9 +1,12 @@
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <unordered_map>
 
 #include "fboo/entity.hpp"
+#include "fboo/event.hpp"
+#include "fboo/game.hpp"
 #include "fboo/util.hpp"
 #include "paths.h"
 
@@ -81,7 +84,28 @@ int main(int argc, char *argv[]) {
         std::cerr << "usage: " << argv[0] << " target.json" << std::endl;
         return EXIT_FAILURE;
     }
-    auto target = std::ifstream(argv[1]);
 
     const auto [items, recipes, factories, technologies] = init_entities();
+
+    json target;
+    std::ifstream(argv[1]) >> target;
+    auto initial_items = target["initial-items"].get<ItemList>();
+    auto goal_items = target["goal-items"].get<ItemList>();
+
+    std::vector<std::unique_ptr<Event>> events;
+    for (const auto &[_, v] : target["initial-factories"].items()) {
+        events.push_back(std::make_unique<BuildEvent>(
+            -1, v["factory-type"], v["factory-name"], v["factory-id"]));
+    }
+
+    events.push_back(std::make_unique<StartEvent>(0, 0, "coal"));
+    events.push_back(std::make_unique<StopEvent>(60, 0));
+    std::cout << events << std::endl;
+
+    for (const auto *e : extract_subclass<BuildEvent>(events)) {
+        std::cout << *e << std::endl;
+    }
+
+    //game::Simulation sim(items, recipes, factories, technologies, events,
+    //                     goal_items);
 }

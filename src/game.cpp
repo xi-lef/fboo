@@ -108,6 +108,12 @@ void Simulation::build_factory(const BuildEvent &e, bool consume) {
 long long Simulation::simulate() {
     std::ranges::sort(events, {}, &Event::get_timestamp);
 
+    // Initialization: execute all (Build)Events with timestamp -1.
+    while (events.front().get_timestamp() == -1) {
+        build_factory(dynamic_cast<BuildEvent &>(events.front()), false);
+        events.pop_front();
+    }
+
     while (!goals.empty()) {
         std::vector<Event> cur_events;
         while (events.front().get_timestamp() == tick) {

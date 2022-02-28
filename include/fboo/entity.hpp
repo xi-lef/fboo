@@ -69,6 +69,7 @@ public:
 
 private:
     std::string category;
+    // TODO required_energy and [cur,remaining]_energy?
     int energy;  // Amount of ticks to execute the recipe.
     bool enabled;
     ItemList ingredients, products;
@@ -93,6 +94,7 @@ public:
 private:
     double crafting_speed;
     std::vector<std::string> crafting_categories;
+    // TODO Recipe *executing_recipe ?
 };
 
 using FactoryMap = std::unordered_map<std::string, Factory>;

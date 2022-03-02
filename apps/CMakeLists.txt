@@ -5,7 +5,7 @@ target_link_libraries(fboo PRIVATE factorio)
 
 foreach(PATH IN ITEMS factory item recipe technology)
   string(TOUPPER ${PATH} NAME)
-  file(REAL_PATH ../json/${PATH}.json JSON_${NAME})
+  get_filename_component(JSON_${NAME} ../json/${PATH}.json REALPATH)
 endforeach()
 
 configure_file(paths.h.in paths.h)

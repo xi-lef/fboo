@@ -131,6 +131,7 @@ long long Simulation::simulate() {
         }
         advance(cur_events);
 
+        // TODO correct?
         for (const auto &[item, n] : goal_items) {
             if (state.has_item(item) >= n) {
                 goal_items.erase(item);
@@ -139,7 +140,7 @@ long long Simulation::simulate() {
         }
     }
 
-    return 0;
+    return tick;
 }
 
 bool Simulation::advance(std::vector<const Event *> cur_events) {

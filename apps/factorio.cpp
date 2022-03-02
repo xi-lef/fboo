@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
         std::cout << *e << std::endl;
     }
 
-    //game::Simulation sim(items, recipes, factories, technologies, events,
-    //                     goal_items);
+    game::Simulation sim(items, recipes, factories, technologies, events,
+                         goal_items);
+    sim.simulate();
 }

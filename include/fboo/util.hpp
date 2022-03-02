@@ -1,7 +1,9 @@
 #pragma once
+#include <map>
 #include <memory>
 #include <ostream>
 #include <ranges>
+#include <unordered_map>
 #include <vector>
 
 template <class T>
@@ -31,6 +33,16 @@ std::ostream &operator<<(std::ostream &os, const It &it) {
         for (const auto &i : it | std::views::drop(1)) {
             os << ", " << i;
         }
+    }
+    return os;
+}
+
+template <class M>
+requires is_specialization<M, std::map>
+      || is_specialization<M, std::unordered_map>
+std::ostream &operator<<(std::ostream &os, const M &m) {
+    for (const auto &[k, v] : m) {
+        os << k << " = " << v << std::endl;
     }
     return os;
 }

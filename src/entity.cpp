@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "entity.hpp"
 
 #include "util.hpp"

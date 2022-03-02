@@ -7,6 +7,7 @@
 class Entity {
 public:
     Entity(std::string name) : name(name) {}
+    virtual ~Entity() {}
 
     virtual std::string to_string() const = 0;
     std::string get_name() const { return name; }

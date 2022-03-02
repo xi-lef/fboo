@@ -46,16 +46,16 @@ class Simulation {
 public:
     Simulation(const ItemMap &all_items, const RecipeMap &all_recipes,
                const FactoryMap &all_factories,
-               const TechnologyMap &all_technologies,
-               EventList events, ItemList goals)
-        : all_items(all_items),
+               const TechnologyMap &all_technologies, EventList events,
+               ItemList goal_items)
+        : state(std::vector(std::views::values(all_recipes).begin(),
+                            std::views::values(all_recipes).end())),
+          goal_items(),
+          events(events.begin(), events.end()),
+          all_items(all_items),
           all_recipes(all_recipes),
           all_factories(all_factories),
-          all_technologies(all_technologies),
-          state(std::vector(std::views::values(all_recipes).begin(),
-                            std::views::values(all_recipes).end())),
-          events(events.begin(), events.end()),
-          goal_items() {
+          all_technologies(all_technologies) {
         for (const auto &i : goal_items) {
             this->goal_items[i.get_name()] = i.get_amount();
         }

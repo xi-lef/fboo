@@ -7,6 +7,7 @@
 class Event {
 public:
     Event(int timestamp) : timestamp(timestamp) {}
+    virtual ~Event() {}
 
     virtual std::string to_string() const;
     virtual std::string get_type() const { throw std::bad_function_call(); }

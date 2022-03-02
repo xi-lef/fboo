@@ -17,21 +17,21 @@ State::State(std::vector<Recipe> all_recipes) {
     }
 }
 
-bool State::has_item(const Ingredient &ingredient) const {
+int State::has_item(const std::string &name) const {
+    return items.at(name);
+}
+
+bool State::has_ingredient(const Ingredient &ingredient) const {
     return items.at(ingredient.get_name()) >= ingredient.get_amount();
 }
 
 bool State::has_items(const ItemList &list) const {
     for (const auto &i : list) {
-        if (!has_item(i)) {
+        if (!has_ingredient(i)) {
             return false;
         }
     }
     return true;
-}
-
-void State::add_item(const Ingredient &ingredient) {
-    add_item(ingredient.get_name(), ingredient.get_amount());
 }
 
 void State::add_item(const std::string &name, int amount) {
@@ -41,9 +41,13 @@ void State::add_item(const std::string &name, int amount) {
     }
 }
 
+void State::add_ingredient(const Ingredient &ingredient) {
+    add_item(ingredient.get_name(), ingredient.get_amount());
+}
+
 void State::add_items(const ItemList &list) {
     for (const auto &ingredient : list) {
-        add_item(ingredient);
+        add_ingredient(ingredient);
     }
 }
 
@@ -51,9 +55,13 @@ void State::remove_item(const std::string &name, int amount) {
     add_item(name, -amount);
 }
 
+void State::remove_ingredient(const Ingredient &ingredient) {
+    remove_item(ingredient.get_name(), ingredient.get_amount());
+}
+
 void State::remove_items(const ItemList &list) {
     for (const auto &ingredient : list) {
-        add_item(ingredient.get_name(), -ingredient.get_amount());
+        remove_ingredient(ingredient);
     }
 }
 
@@ -115,13 +123,20 @@ long long Simulation::simulate() {
         events.pop_front();
     }
 
-    while (!goals.empty()) {
+    while (!goal_items.empty()) {
         std::vector<const Event *> cur_events;
         while (events.front()->get_timestamp() == tick) {
             cur_events.push_back(events.front().get());
             events.pop_front();
         }
         advance(cur_events);
+
+        for (const auto &[item, n] : goal_items) {
+            if (state.has_item(item) >= n) {
+                goal_items.erase(item);
+                state.remove_item(item, n);
+            }
+        }
     }
 
     return 0;

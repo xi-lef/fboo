@@ -44,8 +44,8 @@ class Simulation {
 public:
     Simulation(const ItemMap &all_items, const RecipeMap &all_recipes,
                const FactoryMap &all_factories,
-               const TechnologyMap &all_technologies, std::vector<Event> events,
-               ItemList goals)
+               const TechnologyMap &all_technologies,
+               EventList events, ItemList goals)
         : all_items(all_items),
           all_recipes(all_recipes),
           all_factories(all_factories),
@@ -60,14 +60,14 @@ public:
 private:
     // Does nothing if "fid" is not a known factory.
     bool cancel_recipe(FactoryIdMap::fid_t fid);
-    void build_factory(const BuildEvent &e, bool consume = true);
+    void build_factory(const BuildEvent *e, bool consume = true);
 
-    bool advance(std::vector<Event> cur_events);
+    bool advance(std::vector<const Event *> cur_events);
 
     long long tick = -1;
     State state;
     ItemList goals; // TODO map?
-    std::deque<Event> events;  // TODO Event* ?
+    std::deque<std::shared_ptr<Event>> events;
     // TODO mv these two to state?
     std::unordered_map<FactoryIdMap::fid_t, Recipe> active_factories;
     std::map<FactoryIdMap::fid_t, Recipe> starved_factories;

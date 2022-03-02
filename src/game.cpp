@@ -99,25 +99,26 @@ bool Simulation::cancel_recipe(fid_t fid) {
     return true;
 }
 
-void Simulation::build_factory(const BuildEvent &e, bool consume) {
+void Simulation::build_factory(const BuildEvent *e, bool consume) {
     const Factory *f
-        = state.build_factory(&all_factories.at(e.get_factory_type()), consume);
-    factory_id_map.insert(f, e.get_factory_id());
+        = state.build_factory(&all_factories.at(e->get_factory_type()), consume);
+    factory_id_map.insert(f, e->get_factory_id());
 }
 
 long long Simulation::simulate() {
     std::ranges::sort(events, {}, &Event::get_timestamp);
 
     // Initialization: execute all (Build)Events with timestamp -1.
-    while (events.front().get_timestamp() == -1) {
-        build_factory(dynamic_cast<BuildEvent &>(events.front()), false);
+    while (events.front()->get_timestamp() == -1) {
+        build_factory(dynamic_cast<const BuildEvent *>(events.front().get()),
+                      false);
         events.pop_front();
     }
 
     while (!goals.empty()) {
-        std::vector<Event> cur_events;
-        while (events.front().get_timestamp() == tick) {
-            cur_events.push_back(events.front());
+        std::vector<const Event *> cur_events;
+        while (events.front()->get_timestamp() == tick) {
+            cur_events.push_back(events.front().get());
             events.pop_front();
         }
         advance(cur_events);
@@ -126,28 +127,28 @@ long long Simulation::simulate() {
     return 0;
 }
 
-bool Simulation::advance(std::vector<Event> cur_events) {
+bool Simulation::advance(std::vector<const Event *> cur_events) {
     // Step 1: increment timestamp.
     if (++tick > (1ll << 40)) {
         throw std::logic_error("game duration exceeded 2^40, aborting");
     }
 
     // Step 2: group and sort events.
-    std::vector<ResearchEvent> research_events;
-    std::vector<FactoryEvent> other_events;
+    std::vector<const ResearchEvent *> research_events;
+    std::vector<const FactoryEvent *> other_events;
     if (!cur_events.empty()) {
         auto mid = std::partition(
             cur_events.begin(), cur_events.end(),
-            [](const Event &e) { return e.get_type() == ResearchEvent::type; });
+            [](const Event *e) { return e->get_type() == ResearchEvent::type; });
             //[](const Event &e) { return dynamic_cast<const ResearchEvent *>(&e); });
         std::transform(
             cur_events.begin(), mid, std::back_inserter(research_events),
-            [](Event &e) { return dynamic_cast<ResearchEvent &>(e); });
+            [](const Event *e) { return dynamic_cast<const ResearchEvent *>(e); });
         // TODO victory_event? maybe just not include it in events at all? just
         // generate it at the end of simulate
         std::transform(
             mid, cur_events.end(), std::back_inserter(other_events),
-            [](Event &e) { return dynamic_cast<FactoryEvent &>(e); });
+            [](const Event *e) { return dynamic_cast<const FactoryEvent *>(e); });
 
         std::ranges::sort(research_events, {}, &ResearchEvent::get_technology);
         std::ranges::sort(other_events, {}, &FactoryEvent::get_factory_id);
@@ -168,7 +169,7 @@ bool Simulation::advance(std::vector<Event> cur_events) {
 
     // Step 4: execute research events.
     for (const auto &e : research_events) {
-        const Technology &technology = all_technologies.at(e.get_technology());
+        const Technology &technology = all_technologies.at(e->get_technology());
         for (const std::string &prerequisite : technology.get_prerequisites()) {
             if (!state.is_unlocked(all_technologies.at(prerequisite))) {
                 throw std::logic_error("prerequisite not yet unlocked");
@@ -179,14 +180,14 @@ bool Simulation::advance(std::vector<Event> cur_events) {
     }
 
     // Step 5: execute stop factory events.
-    for (const auto &e : extract_subclass<StopEvent>(other_events)) {
-        fid_t fid = e.get_factory_id();
+    for (const auto *e : extract_subclass<StopEvent>(other_events)) {
+        fid_t fid = e->get_factory_id();
         cancel_recipe(fid);
     }
 
     // Step 6: execute destroy factory events.
-    for (const auto &e : extract_subclass<DestroyEvent>(other_events)) {
-        fid_t fid = e.get_factory_id();
+    for (const auto *e : extract_subclass<DestroyEvent>(other_events)) {
+        fid_t fid = e->get_factory_id();
         cancel_recipe(fid);
         state.destroy_factory(factory_id_map.erase(fid));
     }
@@ -194,19 +195,19 @@ bool Simulation::advance(std::vector<Event> cur_events) {
     // Step 7: handle victory event. TODO
 
     // Step 8: Handle build factory events.
-    for (const auto &e : extract_subclass<BuildEvent>(other_events)) {
+    for (const auto *e : extract_subclass<BuildEvent>(other_events)) {
         build_factory(e);
     }
 
     // Step 9: execute start factory events.
-    for (const auto &e : extract_subclass<StartEvent>(other_events)) {
-        fid_t fid = e.get_factory_id();
+    for (const auto *e : extract_subclass<StartEvent>(other_events)) {
+        fid_t fid = e->get_factory_id();
         cancel_recipe(fid);
 
-        if (!state.is_unlocked(all_recipes.at(e.get_recipe()))) {
+        if (!state.is_unlocked(all_recipes.at(e->get_recipe()))) {
             throw std::logic_error("recipe not yet unlocked");
         }
-        Recipe r = all_recipes.at(e.get_recipe());
+        Recipe r = all_recipes.at(e->get_recipe());
         // TODO rm?
         //double crafting_speed = id_to_factory(fid)->get_crafting_speed();
         //r.set_energy(std::ceil(r.get_energy() / crafting_speed));

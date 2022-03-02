@@ -92,14 +92,14 @@ int main(int argc, char *argv[]) {
     auto initial_items = target["initial-items"].get<ItemList>();
     auto goal_items = target["goal-items"].get<ItemList>();
 
-    std::vector<std::unique_ptr<Event>> events;
+    EventList events;
     for (const auto &[_, v] : target["initial-factories"].items()) {
-        events.push_back(std::make_unique<BuildEvent>(
+        events.push_back(std::make_shared<BuildEvent>(
             -1, v["factory-type"], v["factory-name"], v["factory-id"]));
     }
 
-    events.push_back(std::make_unique<StartEvent>(0, 0, "coal"));
-    events.push_back(std::make_unique<StopEvent>(60, 0));
+    events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
+    events.push_back(std::make_shared<StopEvent>(60, 0));
     std::cout << events << std::endl;
 
     for (const auto *e : extract_subclass<BuildEvent>(events)) {

@@ -16,6 +16,8 @@ protected:
     int timestamp;
 };
 
+using EventList = std::vector<std::shared_ptr<Event>>;
+
 class ResearchEvent : public Event {
 public:
     ResearchEvent(int timestamp, std::string technology)

@@ -150,7 +150,7 @@ public:
 
 private:
     void insert_checked(const Factory *f, fid_t fid) {
-        if (!map.insert({count, f}).second) {
+        if (!map.insert({fid, f}).second) {
             throw std::logic_error("factory id was used twice");
         }
     }

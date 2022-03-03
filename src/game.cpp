@@ -18,7 +18,11 @@ State::State(std::vector<Recipe> all_recipes) {
 }
 
 int State::has_item(const std::string &name) const {
-    return items.at(name);
+    auto r = items.find(name);
+    if (r == items.end()) {
+        return 0;
+    }
+    return r->second;
 }
 
 bool State::has_ingredient(const Ingredient &ingredient) const {

@@ -3,8 +3,13 @@
 #include <memory>
 #include <ostream>
 #include <ranges>
+#include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
+
+#include "entity.hpp"
+#include "event.hpp"
 
 template <class T>
 requires requires(T t) {
@@ -14,8 +19,9 @@ std::ostream &operator<<(std::ostream &os, const T &t) {
     return os << t.to_string();
 }
 
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const std::shared_ptr<T> &t) {
+template <class T>
+requires std::derived_from<T, Event> || std::derived_from<T, Entity>
+std::ostream &operator<<(std::ostream &os, const T *t) {
     return os << *t;
 }
 
@@ -25,15 +31,26 @@ inline constexpr bool is_specialization = false;
 template <template <class...> class T, class... Args>
 inline constexpr bool is_specialization<T<Args...>, T> = true;
 
+template <typename T>
+requires is_specialization<T, std::shared_ptr>
+      || is_specialization<T, std::unique_ptr>
+std::ostream &operator<<(std::ostream &os, const T &t) {
+    return os << *t;
+}
+
 template <class It>
 requires is_specialization<It, std::vector>
 std::ostream &operator<<(std::ostream &os, const It &it) {
-    if (!it.empty()) {
-        os << it.front();
-        for (const auto &i : it | std::views::drop(1)) {
-            os << ", " << i;
-        }
+    if (it.empty()) {
+        return os << "[]";
     }
+
+    os << "[";
+    os << it.front();
+    for (const auto &i : it | std::views::drop(1)) {
+        os << ", " << i;
+    }
+    os << "]";
     return os;
 }
 
@@ -41,9 +58,44 @@ template <class M>
 requires is_specialization<M, std::map>
       || is_specialization<M, std::unordered_map>
 std::ostream &operator<<(std::ostream &os, const M &m) {
-    for (const auto &[k, v] : m) {
-        os << k << " = " << v << std::endl;
+    if (m.empty()) {
+        return os << "{}";
     }
+
+    auto pr = [&](const auto &e) {
+        const auto &[k, v] = e;
+        os << k << ": " << v;
+    };
+
+    os << "{";
+    pr(*m.begin());
+    for (const auto &e : m | std::views::drop(1)) {
+        os << ", ";
+        pr(e);
+    }
+    os << "}";
+    return os;
+}
+
+template <class S>
+requires is_specialization<S, std::set>
+      || is_specialization<S, std::unordered_set>
+std::ostream &operator<<(std::ostream &os, const S &s) {
+    if (s.empty()) {
+        return os << "{}";
+    }
+
+    auto pr = [&](const auto &k) {
+        os << "\"" << k << "\"";
+    };
+
+    os << "{";
+    pr(*s.begin());
+    for (const auto &k : s | std::views::drop(1)) {
+        os << ", ";
+        pr(k);
+    }
+    os << "}";
     return os;
 }
 

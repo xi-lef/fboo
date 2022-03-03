@@ -13,7 +13,7 @@ namespace game {
 
 class State {
 public:
-    State(std::vector<Recipe> all_recipes);
+    State(const RecipeMap &all_recipes);
 
     int has_item(const std::string &name) const;
     bool has_ingredient(const Ingredient &ingredient) const;
@@ -48,8 +48,7 @@ public:
                const FactoryMap &all_factories,
                const TechnologyMap &all_technologies, EventList events,
                ItemList goal_items)
-        : state(std::vector(std::views::values(all_recipes).begin(),
-                            std::views::values(all_recipes).end())),
+        : state(all_recipes),
           goal_items(),
           events(events.begin(), events.end()),
           all_items(all_items),
@@ -79,10 +78,10 @@ private:
     std::map<FactoryIdMap::fid_t, Recipe> starved_factories;
     FactoryIdMap factory_id_map;
 
-    const ItemMap all_items;
-    const RecipeMap all_recipes;
-    const FactoryMap all_factories;
-    const TechnologyMap all_technologies;
+    const ItemMap &all_items;
+    const RecipeMap &all_recipes;
+    const FactoryMap &all_factories;
+    const TechnologyMap &all_technologies;
 };
 
 }  // namespace game

@@ -9,8 +9,8 @@ namespace game {
 
 using fid_t = FactoryIdMap::fid_t;
 
-State::State(std::vector<Recipe> all_recipes) {
-    for (const auto &r : all_recipes) {
+State::State(const RecipeMap &all_recipes) {
+    for (const auto &[_, r] : all_recipes) {
         if (r.is_enabled()) {
             unlocked_recipes.insert(&r);
         }

@@ -18,26 +18,23 @@ std::string Ingredient::to_string() const {
 
 std::string Recipe::to_string() const {
     std::ostringstream ss;
-    ss << "Recipe \"" << name << "\" (" << category << ", initially "
+    ss << "Recipe '" << name << "' (" << category << "; initially "
        << (enabled ? "enabled" : "disabled") << ") costs " << energy
-       << std::endl
-       << "takes: " << ingredients << std::endl
-       << "produces: " << products << std::endl;
+       << "; takes: " << ingredients << "; produces: " << products;
     return ss.str();
 }
 
 std::string Factory::to_string() const {
     std::ostringstream ss;
-    ss << "Factory \"" << name << "\" can craft " << crafting_categories
-       << " at speed " << crafting_speed << std::endl;
+    ss << "Factory '" << name << "' can craft " << crafting_categories
+       << " at speed " << crafting_speed;
     return ss.str();
 }
 
 std::string Technology::to_string() const {
     std::ostringstream ss;
-    ss << "Technology \"" << name << "\"" << std::endl
-       << "requires: " << prerequisites << std::endl
-       << "consumes: " << ingredients << std::endl
-       << "unlocks: " << unlocked_recipes << std::endl;
+    ss << "Technology '" << name << "'"
+       << "; requires: " << prerequisites << "; consumes: " << ingredients
+       << "; unlocks: " << unlocked_recipes;
     return ss.str();
 }

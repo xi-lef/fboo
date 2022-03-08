@@ -171,16 +171,15 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
     }
 
     // Step 3: finish recipes.
-    std::vector<fid_t> finished_factories;
-    for (auto &[fid, r] : active_factories) {
+    for (auto it = active_factories.begin(); it != active_factories.end(); ) {
+        auto &[fid, r] = *it;
         if (r.tick() == 0) {
             state.add_items(r.get_products());
-            finished_factories.push_back(fid);
             starved_factories.insert({fid, r});  // Gather for step 10.
+            it = active_factories.erase(it);
+        } else {
+            ++it;
         }
-    }
-    for (fid_t fid : finished_factories) {
-        active_factories.erase(fid);
     }
 
     // Step 4: execute research events.
@@ -234,8 +233,8 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
     }
 
     // Step 10: handle starved factories by starting production if possible.
-    std::vector<fid_t> satisfied_factories;
-    for (auto [fid, r] : starved_factories) {
+    for (auto it = starved_factories.begin(); it != starved_factories.end(); ) {
+        auto [fid, r] = *it;
         const ItemList &ings = r.get_ingredients();
         if (state.has_items(ings)) {
             state.remove_items(ings);
@@ -245,11 +244,10 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
             r.set_energy(std::ceil(all_recipes.at(r.get_name()).get_energy()
                                    / crafting_speed));
             active_factories.insert({fid, r});
-            satisfied_factories.push_back(fid);
+            it = starved_factories.erase(it);
+        } else {
+            ++it;
         }
-    }
-    for (fid_t fid : satisfied_factories) {
-        starved_factories.erase(fid);
     }
 }
 

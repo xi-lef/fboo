@@ -129,7 +129,7 @@ long long Simulation::simulate() {
 
     while (!goal_items.empty()) {
         std::vector<const Event *> cur_events;
-        while (events.front()->get_timestamp() == tick) {
+        while (!events.empty() && events.front()->get_timestamp() == tick) {
             cur_events.push_back(events.front().get());
             events.pop_front();
         }

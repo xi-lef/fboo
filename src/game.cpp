@@ -127,21 +127,17 @@ long long Simulation::simulate() {
         events.pop_front();
     }
 
-    while (!goal_items.empty()) {
+    // Advance the simulation until all goal items are sufficiently available.
+    while (std::ranges::any_of(goal_items, [&](const auto &v) {
+        return state.has_item(v.first) < v.second;
+    })) {
         std::vector<const Event *> cur_events;
         while (!events.empty() && events.front()->get_timestamp() == tick) {
             cur_events.push_back(events.front().get());
             events.pop_front();
         }
-        advance(cur_events);
 
-        // TODO correct?
-        for (const auto &[item, n] : goal_items) {
-            if (state.has_item(item) >= n) {
-                goal_items.erase(item);
-                state.remove_item(item, n);
-            }
-        }
+        advance(cur_events);
     }
 
     return tick;
@@ -164,8 +160,8 @@ bool Simulation::advance(std::vector<const Event *> cur_events) {
         std::transform(
             cur_events.begin(), mid, std::back_inserter(research_events),
             [](const Event *e) { return dynamic_cast<const ResearchEvent *>(e); });
-        // TODO victory_event? maybe just not include it in events at all? just
-        // generate it at the end of simulate
+        // The VictoryEvent shall never be included in events, so casting to
+        // FactoryEvent is safe.
         std::transform(
             mid, cur_events.end(), std::back_inserter(other_events),
             [](const Event *e) { return dynamic_cast<const FactoryEvent *>(e); });
@@ -212,7 +208,8 @@ bool Simulation::advance(std::vector<const Event *> cur_events) {
         state.destroy_factory(factory_id_map.erase(fid));
     }
 
-    // Step 7: handle victory event. TODO
+    // Step 7: handle victory event. This is handled in simulate by checking if
+    // all goal items are available, in which case the simulation terminates.
 
     // Step 8: Handle build factory events.
     for (const auto *e : extract_subclass<BuildEvent>(other_events)) {

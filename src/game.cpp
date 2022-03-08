@@ -143,7 +143,7 @@ long long Simulation::simulate() {
     return tick;
 }
 
-bool Simulation::advance(std::vector<const Event *> cur_events) {
+void Simulation::advance(std::vector<const Event *> cur_events) {
     // Step 1: increment timestamp.
     if (++tick > (1ll << 40)) {
         throw std::logic_error("game duration exceeded 2^40, aborting");
@@ -251,8 +251,6 @@ bool Simulation::advance(std::vector<const Event *> cur_events) {
     for (fid_t fid : satisfied_factories) {
         starved_factories.erase(fid);
     }
-
-    return true;
 }
 
 }  // namespace game

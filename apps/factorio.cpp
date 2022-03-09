@@ -77,6 +77,66 @@ auto init_entities() {
     return std::tuple(items, recipes, factories, technologies);
 }
 
+void test_challenge1() {
+    json target;
+    std::ifstream(JSON_CHALLENGE1) >> target;
+
+    auto initial_items = target["initial-items"].get<ItemList>();
+    auto goal_items = target["goal-items"].get<ItemList>();
+
+    EventList events;
+    for (const auto &[_, v] : target["initial-factories"].items()) {
+        events.push_back(std::make_shared<BuildEvent>(
+            -1, v["factory-type"], v["factory-name"], v["factory-id"]));
+    }
+
+    events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
+    events.push_back(std::make_shared<StopEvent>(60, 0));
+    std::cout << events << std::endl;
+
+    const auto [items, recipes, factories, technologies] = init_entities();
+    game::Simulation sim(items, recipes, factories, technologies, events,
+                         goal_items);
+    long long tick = sim.simulate();
+    if (tick != 60) {
+        std::cerr << "challenge 1 failed, got tick " << tick << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+void test_challenge2() {
+    json target;
+    std::ifstream(JSON_CHALLENGE2) >> target;
+
+    auto initial_items = target["initial-items"].get<ItemList>();
+    auto goal_items = target["goal-items"].get<ItemList>();
+
+    EventList events;
+    for (const auto &[_, v] : target["initial-factories"].items()) {
+        events.push_back(std::make_shared<BuildEvent>(
+            -1, v["factory-type"], v["factory-name"], v["factory-id"]));
+    }
+
+    events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
+    events.push_back(std::make_shared<BuildEvent>(60, "burner-mining-drill",
+                                                  "coal-mine", 1));
+    events.push_back(std::make_shared<StartEvent>(60, 1, "coal-burner"));
+    events.push_back(std::make_shared<StartEvent>(60, 0, "iron-ore"));
+    events.push_back(std::make_shared<BuildEvent>(120, "stone-furnace",
+                                                  "iron-smelter", 2));
+    events.push_back(std::make_shared<StartEvent>(120, 2, "iron-plate-burner"));
+    std::cout << events << std::endl;
+
+    const auto [items, recipes, factories, technologies] = init_entities();
+    game::Simulation sim(items, recipes, factories, technologies, events,
+                         goal_items);
+    long long tick = sim.simulate();
+    if (tick != 6600) {
+        std::cerr << "challenge 2 failed, got tick " << tick << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char *argv[]) {
@@ -84,6 +144,9 @@ int main(int argc, char *argv[]) {
         std::cerr << "usage: " << argv[0] << " target.json" << std::endl;
         return EXIT_FAILURE;
     }
+
+    //test_challenge1();
+    //test_challenge2();
 
     const auto [items, recipes, factories, technologies] = init_entities();
 
@@ -98,15 +161,13 @@ int main(int argc, char *argv[]) {
             -1, v["factory-type"], v["factory-name"], v["factory-id"]));
     }
 
-    events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
-    events.push_back(std::make_shared<StopEvent>(60, 0));
-    std::cout << events << std::endl;
-
-    for (const auto *e : extract_subclass<BuildEvent>(events)) {
-        std::cout << *e << std::endl;
-    }
+    return 0;
+    // TODO find build order
 
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items);
-    sim.simulate();
+    long long tick = sim.simulate();
+    events.push_back(std::make_shared<VictoryEvent>(tick));
+
+    json order;
 }

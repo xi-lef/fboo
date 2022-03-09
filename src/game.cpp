@@ -153,18 +153,15 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
     std::vector<const ResearchEvent *> research_events;
     std::vector<const FactoryEvent *> other_events;
     if (!cur_events.empty()) {
-        auto mid = std::partition(
-            cur_events.begin(), cur_events.end(),
-            [](const Event *e) { return e->get_type() == ResearchEvent::type; });
-            //[](const Event &e) { return dynamic_cast<const ResearchEvent *>(&e); });
-        std::transform(
-            cur_events.begin(), mid, std::back_inserter(research_events),
-            [](const Event *e) { return dynamic_cast<const ResearchEvent *>(e); });
-        // The VictoryEvent shall never be included in events, so casting to
-        // FactoryEvent is safe.
-        std::transform(
-            mid, cur_events.end(), std::back_inserter(other_events),
-            [](const Event *e) { return dynamic_cast<const FactoryEvent *>(e); });
+        auto mid = std::partition(cur_events.begin(), cur_events.end(),
+                                  cast_event<ResearchEvent>);
+        std::transform(cur_events.begin(), mid,
+                       std::back_inserter(research_events),
+                       cast_event<ResearchEvent>);
+        // The VictoryEvent shall never be included in events, so casting the
+        // remaining events to FactoryEvent is safe.
+        std::transform(mid, cur_events.end(), std::back_inserter(other_events),
+                       cast_event<FactoryEvent>);
 
         std::ranges::sort(research_events, {}, &ResearchEvent::get_technology);
         std::ranges::sort(other_events, {}, &FactoryEvent::get_factory_id);

@@ -7,7 +7,7 @@
 class Entity {
 public:
     Entity(std::string name) : name(name) {}
-    virtual ~Entity() {}
+    virtual ~Entity() = default;
 
     virtual std::string to_string() const = 0;
     std::string get_name() const { return name; }
@@ -130,8 +130,9 @@ using TechnologyMap = std::unordered_map<std::string, Technology>;
 
 class FactoryIdMap {
 public:
-    using fid_t = int; // TODO style guide, where?
-    FactoryIdMap() {}
+    using fid_t = int;
+
+    FactoryIdMap() = default;
 
     fid_t insert(const Factory *f) {
         insert_checked(f, count);

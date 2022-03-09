@@ -7,7 +7,7 @@
 class Event {
 public:
     Event(int timestamp) : timestamp(timestamp) {}
-    virtual ~Event() {}
+    virtual ~Event() = default;
 
     virtual std::string to_string() const;
     virtual std::string get_type() const { throw std::bad_function_call(); }
@@ -21,6 +21,8 @@ using EventList = std::vector<std::shared_ptr<Event>>;
 
 class ResearchEvent : public Event {
 public:
+    inline static std::string type = "research-event";
+
     ResearchEvent(int timestamp, std::string technology)
         : Event(timestamp), technology(technology) {}
 
@@ -29,8 +31,6 @@ public:
     std::string to_string() const override;
     std::string get_type() const override { return type; };
     std::string get_technology() const { return technology; }
-
-    inline static std::string type = "research-event";
 
 private:
     std::string technology;
@@ -50,6 +50,8 @@ protected:
 
 class BuildEvent : public FactoryEvent {
 public:
+    inline static std::string type = "build-factory-event";
+
     BuildEvent(int timestamp, std::string type, std::string name,
                FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id),
@@ -69,8 +71,6 @@ public:
     std::string get_factory_type() const { return factory_type; }
     std::string get_factory_name() const { return factory_name; }
 
-    inline static std::string type = "build-factory-event";
-
 private:
     std::string factory_type;
     std::string factory_name;
@@ -78,18 +78,20 @@ private:
 
 class DestroyEvent : public FactoryEvent {
 public:
+    inline static std::string type = "destroy-destroy-event";
+
     DestroyEvent(int timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(DestroyEvent, type, timestamp, factory_id);
 
     std::string get_type() const override { return type; };
-
-    inline static std::string type = "destroy-destroy-event";
 };
 
 class StartEvent : public FactoryEvent {
 public:
+    inline static std::string type = "start-factory-event";
+
     StartEvent(int timestamp, FactoryIdMap::fid_t factory_id,
                const Recipe &recipe)
         : StartEvent(timestamp, factory_id, recipe.get_name()) {}
@@ -105,31 +107,29 @@ public:
     std::string get_type() const override { return type; };
     std::string get_recipe() const { return recipe; }
 
-    inline static std::string type = "start-factory-event";
-
 private:
     std::string recipe;
 };
 
 class StopEvent : public FactoryEvent {
 public:
+    inline static std::string type = "stop-factory-event";
+
     StopEvent(int timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(StopEvent, type, timestamp, factory_id);
 
     std::string get_type() const override { return type; };
-
-    inline static std::string type = "stop-factory-event";
 };
 
 class VictoryEvent : public Event {
 public:
+    inline static std::string type = "victory-event";
+
     VictoryEvent(int timestamp) : Event(timestamp) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(VictoryEvent, type, timestamp);
 
     std::string get_type() const override { return type; };
-
-    inline static std::string type = "victory-event";
 };

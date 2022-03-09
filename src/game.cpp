@@ -30,7 +30,7 @@ bool State::has_ingredient(const Ingredient &ingredient) const {
 }
 
 bool State::has_items(const ItemList &list) const {
-    for (const auto &i : list) {
+    for (const Ingredient &i : list) {
         if (!has_ingredient(i)) {
             return false;
         }
@@ -50,8 +50,8 @@ void State::add_ingredient(const Ingredient &ingredient) {
 }
 
 void State::add_items(const ItemList &list) {
-    for (const auto &ingredient : list) {
-        add_ingredient(ingredient);
+    for (const Ingredient &i : list) {
+        add_ingredient(i);
     }
 }
 
@@ -64,8 +64,8 @@ void State::remove_ingredient(const Ingredient &ingredient) {
 }
 
 void State::remove_items(const ItemList &list) {
-    for (const auto &ingredient : list) {
-        remove_ingredient(ingredient);
+    for (const Ingredient &i : list) {
+        remove_ingredient(i);
     }
 }
 
@@ -180,7 +180,7 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
     }
 
     // Step 4: execute research events.
-    for (const auto &e : research_events) {
+    for (const ResearchEvent *e : research_events) {
         const Technology &technology = all_technologies.at(e->get_technology());
         for (const std::string &prerequisite : technology.get_prerequisites()) {
             if (!state.is_unlocked(all_technologies.at(prerequisite))) {
@@ -192,13 +192,13 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
     }
 
     // Step 5: execute stop factory events.
-    for (const auto *e : extract_subclass<StopEvent>(other_events)) {
+    for (const StopEvent *e : extract_subclass<StopEvent>(other_events)) {
         fid_t fid = e->get_factory_id();
         cancel_recipe(fid);
     }
 
     // Step 6: execute destroy factory events.
-    for (const auto *e : extract_subclass<DestroyEvent>(other_events)) {
+    for (const DestroyEvent *e : extract_subclass<DestroyEvent>(other_events)) {
         fid_t fid = e->get_factory_id();
         cancel_recipe(fid);
         state.destroy_factory(factory_id_map.erase(fid));
@@ -208,12 +208,12 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
     // all goal items are available, in which case the simulation terminates.
 
     // Step 8: Handle build factory events.
-    for (const auto *e : extract_subclass<BuildEvent>(other_events)) {
+    for (const BuildEvent *e : extract_subclass<BuildEvent>(other_events)) {
         build_factory(e);
     }
 
     // Step 9: execute start factory events.
-    for (const auto *e : extract_subclass<StartEvent>(other_events)) {
+    for (const StartEvent *e : extract_subclass<StartEvent>(other_events)) {
         fid_t fid = e->get_factory_id();
         cancel_recipe(fid);
 

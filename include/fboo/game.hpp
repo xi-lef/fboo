@@ -55,7 +55,7 @@ public:
           all_recipes(all_recipes),
           all_factories(all_factories),
           all_technologies(all_technologies) {
-        for (const auto &i : goal_items) {
+        for (const Ingredient &i : goal_items) {
             this->goal_items[i.get_name()] = i.get_amount();
         }
     }

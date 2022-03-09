@@ -26,7 +26,7 @@ auto init_entities() {
                       std::forward_as_tuple(name, val["type"]));
     }
 
-    //for (const auto& [k, v] : items) { std::cout << v << std::endl; }
+    //for (const auto& [k, v] : items) { std::cerr << v << std::endl; }
 
     json recipe;
     std::ifstream(JSON_RECIPE) >> recipe;
@@ -39,7 +39,7 @@ auto init_entities() {
                                   val["products"]));
     }
 
-    //for (const auto& [k, v] : recipes) { std::cout << v << std::endl; }
+    //for (const auto& [k, v] : recipes) { std::cerr << v << std::endl; }
 
     json factory;
     std::ifstream(JSON_FACTORY) >> factory;
@@ -50,7 +50,7 @@ auto init_entities() {
                                                 val["crafting_categories"]));
     }
 
-    //for (const auto& [k, v] : factories) { std::cout << v << std::endl; }
+    //for (const auto& [k, v] : factories) { std::cerr << v << std::endl; }
 
     json technology;
     std::ifstream(JSON_TECHNOLOGY) >> technology;
@@ -72,7 +72,7 @@ auto init_entities() {
                                   val["ingredients"], unlocked_recipes));
     }
 
-    //for (const auto& [k, v] : technologies) { std::cout << v << std::endl; }
+    //for (const auto& [k, v] : technologies) { std::cerr << v << std::endl; }
 
     return std::tuple(items, recipes, factories, technologies);
 }
@@ -92,7 +92,7 @@ void test_challenge1() {
 
     events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
     events.push_back(std::make_shared<StopEvent>(60, 0));
-    std::cout << events << std::endl;
+    std::cerr << events << std::endl;
 
     const auto [items, recipes, factories, technologies] = init_entities();
     game::Simulation sim(items, recipes, factories, technologies, events,
@@ -125,7 +125,7 @@ void test_challenge2() {
     events.push_back(std::make_shared<BuildEvent>(120, "stone-furnace",
                                                   "iron-smelter", 2));
     events.push_back(std::make_shared<StartEvent>(120, 2, "iron-plate-burner"));
-    std::cout << events << std::endl;
+    std::cerr << events << std::endl;
 
     const auto [items, recipes, factories, technologies] = init_entities();
     game::Simulation sim(items, recipes, factories, technologies, events,

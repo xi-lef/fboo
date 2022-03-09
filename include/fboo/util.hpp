@@ -118,3 +118,10 @@ auto extract_subclass(const It &it) {
            })
            | std::views::filter([](const auto *e) { return e; });
 }
+
+template <class T, class U>
+const T *cast(const U *u) {
+    return dynamic_cast<const T *>(u);
+}
+template <class T>
+constexpr auto cast_event = cast<T, Event>;

@@ -26,7 +26,7 @@ int State::has_item(const std::string &name) const {
 }
 
 bool State::has_ingredient(const Ingredient &ingredient) const {
-    return items.at(ingredient.get_name()) >= ingredient.get_amount();
+    return has_item(ingredient.get_name()) >= ingredient.get_amount();
 }
 
 bool State::has_items(const ItemList &list) const {

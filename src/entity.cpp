@@ -19,8 +19,8 @@ std::string Ingredient::to_string() const {
 std::string Recipe::to_string() const {
     std::ostringstream ss;
     ss << "Recipe '" << name << "' (" << category << "; initially "
-       << (enabled ? "enabled" : "disabled") << ") costs " << energy
-       << "; takes: " << ingredients << "; produces: " << products;
+       << (enabled ? "enabled" : "disabled") << ") takes " << energy
+       << " ticks; takes: " << ingredients << "; produces: " << products;
     return ss.str();
 }
 

@@ -47,9 +47,8 @@ public:
     Simulation(const ItemMap &all_items, const RecipeMap &all_recipes,
                const FactoryMap &all_factories,
                const TechnologyMap &all_technologies, EventList events,
-               ItemList goal_items)
+               ItemList goal_items, ItemList initial_items)
         : state(all_recipes),
-          goal_items(),
           events(events.begin(), events.end()),
           all_items(all_items),
           all_recipes(all_recipes),
@@ -58,6 +57,7 @@ public:
         for (const Ingredient &i : goal_items) {
             this->goal_items[i.get_name()] = i.get_amount();
         }
+        state.add_items(initial_items);
     }
 
     long long simulate();

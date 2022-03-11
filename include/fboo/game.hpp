@@ -67,7 +67,7 @@ private:
     bool cancel_recipe(FactoryIdMap::fid_t fid);
     void build_factory(const BuildEvent *e, bool consume = true);
 
-    void advance(std::vector<const Event *> cur_events);
+    void advance();
 
     long long tick = -1;
     State state;

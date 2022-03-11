@@ -131,25 +131,24 @@ long long Simulation::simulate() {
     while (std::ranges::any_of(goal_items, [&](const auto &v) {
         return state.has_item(v.first) < v.second;
     })) {
-        std::vector<const Event *> cur_events;
-        while (!events.empty() && events.front()->get_timestamp() == tick) {
-            cur_events.push_back(events.front().get());
-            events.pop_front();
-        }
-
-        advance(cur_events);
+        advance();
     }
 
     return tick;
 }
 
-void Simulation::advance(std::vector<const Event *> cur_events) {
+void Simulation::advance() {
     // Step 1: increment timestamp.
     if (++tick > (1ll << 40)) {
         throw std::logic_error("game duration exceeded 2^40, aborting");
     }
 
-    // Step 2: group and sort events.
+    // Step 2: gather, group and sort events for the current tick.
+    std::vector<const Event *> cur_events;
+    while (!events.empty() && events.front()->get_timestamp() == tick) {
+        cur_events.push_back(events.front().get());
+        events.pop_front();
+    }
     std::vector<const ResearchEvent *> research_events;
     std::vector<const FactoryEvent *> other_events;
     if (!cur_events.empty()) {
@@ -167,7 +166,7 @@ void Simulation::advance(std::vector<const Event *> cur_events) {
         std::ranges::sort(other_events, {}, &FactoryEvent::get_factory_id);
     }
 
-    // Step 3: finish recipes.
+    // Step 3: work on (or finish) recipes.
     for (auto it = active_factories.begin(); it != active_factories.end(); ) {
         auto &[fid, r] = *it;
         if (r.tick() == 0) {

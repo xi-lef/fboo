@@ -77,7 +77,7 @@ auto init_entities() {
     return std::tuple(items, recipes, factories, technologies);
 }
 
-void test_challenge1() {
+[[maybe_unused]] void test_challenge1() {
     json target;
     std::ifstream(JSON_CHALLENGE1) >> target;
 
@@ -104,7 +104,7 @@ void test_challenge1() {
     }
 }
 
-void test_challenge2() {
+[[maybe_unused]] void test_challenge2() {
     json target;
     std::ifstream(JSON_CHALLENGE2) >> target;
 
@@ -147,8 +147,10 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    //test_challenge1();
-    //test_challenge2();
+    std::clog.setstate(std::ios_base::failbit);
+    test_challenge1();
+    test_challenge2();
+    std::clog.clear();
 
     const auto [items, recipes, factories, technologies] = init_entities();
 

@@ -64,7 +64,7 @@ public:
 
 private:
     // Does nothing if "fid" is not a known factory.
-    bool cancel_recipe(FactoryIdMap::fid_t fid);
+    void cancel_recipe(FactoryIdMap::fid_t fid);
     void build_factory(const BuildEvent *e, bool consume = true);
 
     void advance();

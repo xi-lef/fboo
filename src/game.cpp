@@ -101,14 +101,12 @@ void State::destroy_factory(const Factory *f) {
     delete f;
 }
 
-bool Simulation::cancel_recipe(fid_t fid) {
+void Simulation::cancel_recipe(fid_t fid) {
     auto search = active_factories.find(fid);
-    if (search == active_factories.end()) {
-        return false;
+    if (search != active_factories.end()) {
+        state.add_items(search->second.get_ingredients());
+        active_factories.erase(search);
     }
-    state.add_items(search->second.get_ingredients());
-    active_factories.erase(search);
-    return true;
 }
 
 void Simulation::build_factory(const BuildEvent *e, bool consume) {

@@ -4,6 +4,12 @@
 
 #include "util.hpp"
 
+void to_json(nlohmann::json &j, const EventList &l) {
+    for (const auto &e : l) {
+        j.push_back(e->as_json());
+    }
+}
+
 std::string Event::to_string() const {
     std::ostringstream ss;
     ss << timestamp << ": " << get_type();

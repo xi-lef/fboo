@@ -173,5 +173,5 @@ int main(int argc, char *argv[]) {
     long long tick = sim.simulate();
     events.push_back(std::make_shared<VictoryEvent>(tick));
 
-    json order;
+    std::cout << json(events) << std::endl;
 }

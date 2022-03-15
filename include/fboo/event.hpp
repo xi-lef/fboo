@@ -9,6 +9,8 @@ public:
     Event(int timestamp) : timestamp(timestamp) {}
     virtual ~Event() = default;
 
+    // TODO as_json is bad, duplicate code, but idk how to fix it
+    virtual nlohmann::json as_json() const { throw std::bad_function_call(); }
     virtual std::string to_string() const;
     virtual std::string get_type() const { throw std::bad_function_call(); }
     int get_timestamp() const { return timestamp; }
@@ -18,6 +20,7 @@ protected:
 };
 
 using EventList = std::vector<std::shared_ptr<Event>>;
+void to_json(nlohmann::json &j, const EventList &l);
 
 class ResearchEvent : public Event {
 public:
@@ -28,6 +31,11 @@ public:
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResearchEvent, type, timestamp, technology);
 
+    nlohmann::json as_json() const override {
+        nlohmann::json j;
+        to_json(j, *this);
+        return j;
+    }
     std::string to_string() const override;
     std::string get_type() const override { return type; };
     std::string get_technology() const { return technology; }
@@ -66,6 +74,11 @@ public:
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(BuildEvent, type, timestamp, factory_id,
                                    factory_type);
 
+    nlohmann::json as_json() const override {
+        nlohmann::json j;
+        to_json(j, *this);
+        return j;
+    }
     std::string to_string() const override;
     std::string get_type() const override { return type; };
     std::string get_factory_type() const { return factory_type; }
@@ -85,6 +98,11 @@ public:
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(DestroyEvent, type, timestamp, factory_id);
 
+    nlohmann::json as_json() const override {
+        nlohmann::json j;
+        to_json(j, *this);
+        return j;
+    }
     std::string get_type() const override { return type; };
 };
 
@@ -103,6 +121,11 @@ public:
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(StartEvent, type, timestamp, factory_id,
                                    recipe);
 
+    nlohmann::json as_json() const override {
+        nlohmann::json j;
+        to_json(j, *this);
+        return j;
+    }
     std::string to_string() const override;
     std::string get_type() const override { return type; };
     std::string get_recipe() const { return recipe; }
@@ -120,6 +143,11 @@ public:
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(StopEvent, type, timestamp, factory_id);
 
+    nlohmann::json as_json() const override {
+        nlohmann::json j;
+        to_json(j, *this);
+        return j;
+    }
     std::string get_type() const override { return type; };
 };
 
@@ -131,5 +159,10 @@ public:
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(VictoryEvent, type, timestamp);
 
+    nlohmann::json as_json() const override {
+        nlohmann::json j;
+        to_json(j, *this);
+        return j;
+    }
     std::string get_type() const override { return type; };
 };

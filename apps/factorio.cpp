@@ -131,7 +131,9 @@ void test_challenge2() {
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items, initial_items);
     long long tick = sim.simulate();
-    if (tick != 6600) {
+    // solution-2.json has the VictoryEvent at tick 6600, but it is already
+    // possible as early as tick 6132.
+    if (tick != 6132) {
         std::cerr << "challenge 2 failed, got tick " << tick << std::endl;
         exit(EXIT_FAILURE);
     }

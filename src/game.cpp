@@ -135,11 +135,11 @@ long long Simulation::simulate() {
     })) {
         advance();
 
-        std::clog << "items after tick " << tick << ": " << state.items
+        std::clog << "items after tick " << tick << ": " << state.get_items()
                   << std::endl << std::endl;
     }
 
-    std::clog << "done in tick " << tick << ", items: " << state.items
+    std::clog << "done in tick " << tick << ", items: " << state.get_items()
               << ", goal_items: " << goal_items << std::endl;
     return tick;
 }

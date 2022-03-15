@@ -15,6 +15,7 @@ class State {
 public:
     State(const RecipeMap &all_recipes);
 
+    auto get_items() const { return items; }  // For debugging.
     int has_item(const std::string &name) const;
     bool has_ingredient(const Ingredient &ingredient) const;
     bool has_items(const ItemList &list) const;

@@ -220,12 +220,9 @@ void Simulation::advance() {
             throw std::logic_error("recipe not yet unlocked");
         }
         Recipe r = all_recipes.at(e->get_recipe());
-        // TODO rm?
-        //double crafting_speed = id_to_factory(fid)->get_crafting_speed();
-        //r.set_energy(std::ceil(r.get_energy() / crafting_speed));
-
-        // TODO don't add to active_factories, correct?
-        starved_factories.insert({fid, r});  // Gather for step 10.
+        // Use insert_or_assign to potentially overwrite a recipe that was
+        // inserted for fid in step 3.
+        starved_factories.insert_or_assign(fid, r);  // Gather for step 10.
     }
 
     // Step 10: handle starved factories by starting production if possible.

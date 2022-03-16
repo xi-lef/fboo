@@ -1,6 +1,6 @@
-#include <sstream>
-
 #include "event.hpp"
+
+#include <sstream>
 
 #include "util.hpp"
 

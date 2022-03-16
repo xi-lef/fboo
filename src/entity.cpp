@@ -1,6 +1,6 @@
-#include <sstream>
-
 #include "entity.hpp"
+
+#include <sstream>
 
 #include "util.hpp"
 

@@ -133,8 +133,6 @@ class FactoryIdMap {
 public:
     using fid_t = int;
 
-    FactoryIdMap() = default;
-
     fid_t insert(const Factory *f) {
         insert_checked(f, count);
         return count++;
@@ -151,6 +149,11 @@ public:
 
     const Factory *operator[](fid_t fid) const { return map.at(fid); }
 
+    auto begin() { return map.begin(); }
+    auto begin() const { return map.begin(); }
+    auto end() { return map.end(); }
+    auto end() const { return map.end(); }
+
 private:
     void insert_checked(const Factory *f, fid_t fid) {
         if (!map.insert({fid, f}).second) {
@@ -158,6 +161,6 @@ private:
         }
     }
 
-    fid_t count;
+    fid_t count = 0;
     std::unordered_map<fid_t, const Factory *> map;
 };

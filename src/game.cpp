@@ -246,11 +246,10 @@ void Simulation::advance() {
         const ItemList &ings = r.get_ingredients();
         if (state.has_items(ings)) {
             state.remove_items(ings);
-            double crafting_speed = factory_id_map[fid]->get_crafting_speed();
+            const Factory *f = factory_id_map[fid];
             // r.energy is 0, so we need to get the actual required energy from
             // all_recipes. TODO meh
-            r.set_energy(std::ceil(all_recipes.at(r.get_name()).get_energy()
-                                   / crafting_speed));
+            r.set_energy(f->calc_ticks(all_recipes.at(r.get_name())));
             std::clog << "factory " << fid << ": starting " << r << std::endl;
             active_factories.insert({fid, r});
             it = starved_factories.erase(it);

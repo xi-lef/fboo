@@ -89,6 +89,9 @@ public:
 
     std::string to_string() const override;
     double get_crafting_speed() const { return crafting_speed; }
+    int calc_ticks(const Recipe &r) const {
+        return std::ceil(r.get_energy() / get_crafting_speed());
+    }
     std::set<std::string> get_crafting_categories() const {
         return crafting_categories;
     }

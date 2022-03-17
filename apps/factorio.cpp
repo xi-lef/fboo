@@ -165,13 +165,13 @@ int main(int argc, char *argv[]) {
             -1, v["factory-type"], v["factory-name"], v["factory-id"]));
     }
 
-    return 0;
-    // TODO find build order
+    EventList solution_events; // TODO find build order
+    std::ranges::copy(solution_events, std::back_inserter(events));
 
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items, initial_items);
     long long tick = sim.simulate();
-    events.push_back(std::make_shared<VictoryEvent>(tick));
+    solution_events.push_back(std::make_shared<VictoryEvent>(tick));
 
-    std::cout << json(events) << std::endl;
+    std::cout << json(solution_events) << std::endl;
 }

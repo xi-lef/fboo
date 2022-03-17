@@ -1,6 +1,7 @@
 #pragma once
 #include <nlohmann/json.hpp>
 #include <string>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -81,20 +82,20 @@ using RecipeMap = std::unordered_map<std::string, Recipe>;
 class Factory : public Entity {
 public:
     Factory(std::string name, double crafting_speed,
-            std::vector<std::string> crafting_categories)
+            std::set<std::string> crafting_categories)
         : Entity(name),
           crafting_speed(crafting_speed),
           crafting_categories(crafting_categories) {}
 
     std::string to_string() const override;
     double get_crafting_speed() const { return crafting_speed; }
-    std::vector<std::string> get_crafting_categories() const {
+    std::set<std::string> get_crafting_categories() const {
         return crafting_categories;
     }
 
 private:
     double crafting_speed;
-    std::vector<std::string> crafting_categories;
+    std::set<std::string> crafting_categories;
     // TODO Recipe *executing_recipe ?
 };
 

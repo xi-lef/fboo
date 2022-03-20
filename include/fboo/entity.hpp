@@ -87,7 +87,7 @@ public:
     bool is_enabled() const { return enabled; }
     int get_energy() const { return energy; }
     ItemList get_ingredients() const { return ingredients; }
-    ItemList get_products() const { return products; }
+    const ItemList &get_products() const { return products; }
 
     void set_energy(int e) { energy = e; }
     int tick() { return --energy; }
@@ -115,7 +115,7 @@ public:
     int calc_ticks(const Recipe &r) const {
         return std::ceil(r.get_energy() / get_crafting_speed());
     }
-    std::set<std::string> get_crafting_categories() const {
+    const std::set<std::string> &get_crafting_categories() const {
         return crafting_categories;
     }
 
@@ -139,9 +139,11 @@ public:
     bool operator==(const Entity &o) const { return name == o.get_name(); }
 
     std::string to_string() const override;
-    std::vector<std::string> get_prerequisites() const { return prerequisites; }
-    ItemList get_ingredients() const { return ingredients; }
-    std::vector<std::string> get_unlocked_recipes() const {
+    const std::vector<std::string> &get_prerequisites() const {
+        return prerequisites;
+    }
+    const ItemList &get_ingredients() const { return ingredients; }
+    const std::vector<std::string> &get_unlocked_recipes() const {
         return unlocked_recipes;
     }
 

@@ -206,14 +206,14 @@ void Simulation::advance() {
     // Step 5: execute stop factory events.
     for (const StopEvent *e : extract_subclass<StopEvent>(other_events)) {
         fid_t fid = e->get_factory_id();
-        std::clog << "factory " << fid << ": stopping";
+        std::clog << "factory " << fid << ": stopping" << std::endl;
         cancel_recipe(fid);
     }
 
     // Step 6: execute destroy factory events.
     for (const DestroyEvent *e : extract_subclass<DestroyEvent>(other_events)) {
         fid_t fid = e->get_factory_id();
-        std::clog << "factory " << fid << ": destroying";
+        std::clog << "factory " << fid << ": destroying" << std::endl;
         cancel_recipe(fid);
         state.destroy_factory(factory_id_map.erase(fid));
     }

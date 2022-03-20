@@ -43,6 +43,7 @@ private:
     std::unordered_set<const Technology *> unlocked_technologies;
 };
 
+// TODO namespace?
 class Simulation {
 public:
     Simulation(const ItemMap &all_items, const RecipeMap &all_recipes,
@@ -79,7 +80,7 @@ private:
     std::map<FactoryIdMap::fid_t, Recipe> starved_factories;
     FactoryIdMap factory_id_map;
 
-    const ItemMap &all_items;
+    const ItemMap &all_items; // TODO unused
     const RecipeMap &all_recipes;
     const FactoryMap &all_factories;
     const TechnologyMap &all_technologies;

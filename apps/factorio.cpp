@@ -7,6 +7,7 @@
 #include "fboo/entity.hpp"
 #include "fboo/event.hpp"
 #include "fboo/game.hpp"
+#include "fboo/order.hpp"
 #include "fboo/util.hpp"
 #include "paths.h"
 
@@ -160,12 +161,15 @@ int main(int argc, char *argv[]) {
     auto goal_items = target["goal-items"].get<ItemList>();
 
     EventList events;
+    std::vector<Factory> initial_factories;
     for (const auto &[_, v] : target["initial-factories"].items()) {
+        initial_factories.push_back(factories.at(v["factory-type"]));
         events.push_back(std::make_shared<BuildEvent>(
             -1, v["factory-type"], v["factory-name"], v["factory-id"]));
     }
 
-    EventList solution_events; // TODO find build order
+    EventList solution_events = order::compute(
+        items, recipes, factories, technologies, initial_factories, goal_items);
     std::ranges::copy(solution_events, std::back_inserter(events));
 
     game::Simulation sim(items, recipes, factories, technologies, events,

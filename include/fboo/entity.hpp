@@ -42,9 +42,32 @@ public:
     std::string to_string() const override;
     int get_amount() const { return amount; }
 
+    template <size_t I>
+    const auto &get() & {
+        if constexpr (I == 0) return name;
+        else if constexpr (I == 1) return amount;
+    }
+    template <size_t I>
+    const auto &get() const & {
+        if constexpr (I == 0) return name;
+        else if constexpr (I == 1) return amount;
+    }
+    template <size_t I>
+    const auto &get() && {
+        if constexpr (I == 0) return std::move(name);
+        else if constexpr (I == 1) return std::move(amount);
+    }
+
 private:
     int amount;
 };
+
+namespace std {
+template <>
+struct tuple_size<Ingredient> : integral_constant<size_t, 2> {};
+template <size_t I>
+struct tuple_element<I, Ingredient> : tuple_element<I, tuple<string, int>> {};
+}  // namespace std
 
 using ItemList = std::vector<Ingredient>;
 

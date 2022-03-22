@@ -168,8 +168,9 @@ int main(int argc, char *argv[]) {
             -1, v["factory-type"], v["factory-name"], v["factory-id"]));
     }
 
-    EventList solution_events = order::compute(
-        items, recipes, factories, technologies, initial_factories, goal_items);
+    EventList solution_events
+        = order::compute(items, recipes, factories, technologies,
+                         initial_factories, initial_items, goal_items);
     std::ranges::copy(solution_events, std::back_inserter(events));
 
     game::Simulation sim(items, recipes, factories, technologies, events,

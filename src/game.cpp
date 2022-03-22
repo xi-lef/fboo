@@ -108,6 +108,8 @@ void Simulation::cancel_recipe(fid_t fid) {
         state.add_items(search->second.get_ingredients());
         active_factories.erase(search);
     }
+    // In case the factory finished its recipe in the current tick.
+    starved_factories.erase(fid);
 }
 
 void Simulation::build_factory(const BuildEvent *e, bool consume) {
@@ -122,13 +124,14 @@ long long Simulation::simulate() {
 
     // Initialization: execute all (Build)Events with timestamp -1.
     // TODO use special value instead of -1
+    std::clog << "tick -1: initializing factories" << std::endl;
     while (events.front()->get_timestamp() == -1) {
         build_factory(dynamic_cast<const BuildEvent *>(events.front().get()),
                       false);
         events.pop_front();
     }
 
-    std::clog << "goal_items: " << goal_items << std::endl;
+    std::clog << "goal_items: " << goal_items << std::endl << std::endl;
 
     // Advance the simulation until all goal items are sufficiently available.
     while (std::ranges::any_of(goal_items, [&](const auto &v) {

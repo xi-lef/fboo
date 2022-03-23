@@ -143,8 +143,8 @@ auto init_entities() {
 }  // namespace
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        std::cerr << "usage: " << argv[0] << " target.json" << std::endl;
+    if (argc < 2 || argc > 3) {
+        std::cerr << "usage: " << argv[0] << " target.json [--debug]" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -173,6 +173,9 @@ int main(int argc, char *argv[]) {
                          initial_factories, initial_items, goal_items);
     std::ranges::copy(solution_events, std::back_inserter(events));
 
+    if (argc != 3) {
+        std::clog.setstate(std::ios_base::failbit);
+    }
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items, initial_items);
     long long tick = sim.simulate();

@@ -8,25 +8,17 @@
 #include "game.hpp"
 #include "util.hpp"
 
-namespace order {
-
 using fid_t = FactoryIdMap::fid_t;
 
-long long tick = 0;
-game::State *state;
-EventList order;
-FactoryIdMap fid_map;
-std::unordered_set<std::string> craftable_categories;
 //FactoryMap unbuilt_factories;
-std::unordered_set<std::string> craftable_items;
 
-fid_t add_factory(const Factory &f, bool init = false) {
-    fid_t fid = fid_map.insert(&f);  // TODO only works for player
+fid_t Order::add_factory(const Factory &f, bool init) {
+    fid_t fid = fid_map.insert(&f);  // TODO only works for player (for initial_factories)
     for (const std::string &s : f.get_crafting_categories()) {
         craftable_categories.insert(s);
     }
     //unbuilt_factories.erase(f.get_name());
-    state->build_factory(&f, !init);
+    state.build_factory(&f, !init);
 
     if (!init) {
         // BuildEvents are handled before StartEvents, so we don't need to
@@ -38,7 +30,7 @@ fid_t add_factory(const Factory &f, bool init = false) {
     return fid;
 }
 
-bool is_craftable(const Recipe &r) {
+bool Order::is_craftable(const Recipe &r) const {
     // If all ingredients are craftable and we have a factory that can
     // produce this item, this recipe is also craftable.
     return std::ranges::all_of(
@@ -49,7 +41,7 @@ bool is_craftable(const Recipe &r) {
            && craftable_categories.contains(r.get_category());
 }
 
-void craft(const Recipe &r, int amount = 1) {
+void Order::craft(const Recipe &r, int amount) {
     std::clog << "crafting " << amount << " of " << r << std::endl;
     auto f = std::ranges::find_if(fid_map, [&](const auto &v) {
         return v.second->get_crafting_categories().contains(r.get_category());
@@ -59,29 +51,17 @@ void craft(const Recipe &r, int amount = 1) {
     }
     order.push_back(std::make_shared<StartEvent>(tick, f->first, r));
     std::clog << "craft: " << order.back() << ", ";
-    tick += f->second->calc_ticks(r) * amount;
+    tick += f->second->calc_ticks(r) * amount; // TODO /produced_amount
     order.push_back(std::make_shared<StopEvent>(tick, f->first));
     std::clog << order.back() << std::endl;
     for (const Ingredient &i : r.get_products()) {
-        state->add_item(i.get_name(), i.get_amount() * amount);
+        state.add_item(i.get_name(), i.get_amount() * amount);
     }
 }
 
-EventList compute(const ItemMap &all_items, const RecipeMap &all_recipes,
-                  const FactoryMap &all_factories,
-                  const TechnologyMap &all_technologies,
-                  const std::vector<Factory> &initial_factories,
-                  const ItemList &initial_items,
-                  const ItemList &goal_items) {
+EventList Order::compute() {
     //unbuilt_factories = all_factories;
-    game::State state(all_recipes);
-    order::state = &state;
-
-    state.add_items(initial_items);
-    for (const Factory &f : initial_factories) {
-        add_factory(f, true);
-    }
-    std::clog << "craftable categories: " << craftable_categories << std::endl;
+    //std::clog << "craftable categories: " << craftable_categories << std::endl;
 
     // Determine all needed items and their respective amounts.
     std::unordered_map<std::string, int> needed_items;
@@ -104,12 +84,13 @@ EventList compute(const ItemMap &all_items, const RecipeMap &all_recipes,
                   return craftable_categories.contains(t.second.get_category());
               });
         //for (const auto &x : craftable_options) { std::clog << x.second << std::endl; }
+        // TODO this results in endless loop if there's only one item in work
         //if (std::ranges::empty(craftable_options)) {
         //    work.push_back(ingredient);
         //    continue;
         //}
 
-        // TODO use options here
+        // TODO use options here, descend recursive function
         const Recipe &r = all_recipes.at(name == "iron-plate" ? "iron-plate-burner" : name);
         if (is_craftable(r)) {
             craftable_items.insert(name);
@@ -178,23 +159,5 @@ EventList compute(const ItemMap &all_items, const RecipeMap &all_recipes,
         }
     }
 
-    //for (const auto &[name, amount] : needed_items) {
-    //    const Recipe &r = all_recipes.at(name);
-    //    std::string needed_category = r.get_category();
-    //    auto f = std::ranges::find_if(fid_map, [&](const auto &v) {
-    //        return v.second->get_crafting_categories().contains(needed_category);
-    //    });
-    //    if (f == fid_map.end()) {
-    //        throw std::logic_error("idk");
-    //    }
-    //    std::clog << f->second << std::endl;
-    //    order.push_back(std::make_shared<StartEvent>(tick, f->first, r));
-    //    tick += f->second->calc_ticks(r) * amount;
-    //    order.push_back(std::make_shared<StopEvent>(tick, f->first));
-    //}
-    //game::State state(all_recipes);
-
     return order;
 }
-
-}  // namespace order

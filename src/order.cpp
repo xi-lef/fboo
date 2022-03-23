@@ -88,7 +88,7 @@ EventList compute(const ItemMap &all_items, const RecipeMap &all_recipes,
     std::unordered_map<std::string, const Recipe *> uncraftable_items;
     std::deque<Ingredient> work(goal_items.begin(), goal_items.end());
     while (!work.empty()) {
-        const Ingredient &ingredient = work.front();
+        const Ingredient ingredient = work.front();
         work.pop_front();
         const auto &[name, amount] = ingredient;
         std::clog << "working on " << name << amount << std::endl;

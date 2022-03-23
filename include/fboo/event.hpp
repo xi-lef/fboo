@@ -72,7 +72,7 @@ public:
                      factory_id) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(BuildEvent, type, timestamp, factory_id,
-                                   factory_type);
+                                   factory_type, factory_name);
 
     nlohmann::json as_json() const override {
         nlohmann::json j;

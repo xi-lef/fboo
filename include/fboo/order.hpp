@@ -29,7 +29,7 @@ public:
 
 private:
     FactoryIdMap::fid_t add_factory(const Factory &f, bool init = false);
-    bool is_craftable(const Recipe &r) const;
+    bool is_craftable(const Recipe &r);
     void craft(const Recipe &r, int amount = 1);
     bool create_item(const std::string &name, int amount,
                      std::set<std::string> visited = {}, bool dry_run = false);
@@ -43,9 +43,9 @@ private:
     const ItemList &goal_items;
 
     long long tick;
-    //std::vector<Factory> factories;
     std::unordered_set<std::string> craftable_categories;
     std::unordered_set<std::string> craftable_items;
+    std::unordered_set<const Recipe *> craftable_recipes;
     game::State state;
     FactoryIdMap fid_map;
     EventList order;

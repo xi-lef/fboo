@@ -31,7 +31,11 @@ private:
     FactoryIdMap::fid_t add_factory(const Factory &f, bool init = false);
     bool is_craftable(const Recipe &r) const;
     void craft(const Recipe &r, int amount = 1);
-    bool create_item(const std::string &name, int amount);
+    bool create_item(const std::string &name, int amount,
+                     std::set<std::string> visited = {}, bool dry_run = false);
+    bool create_factory(const std::string &category,
+                        std::set<std::string> visited = {},
+                        bool dry_run = false);
 
     const RecipeMap &all_recipes;
     const FactoryMap &all_factories;

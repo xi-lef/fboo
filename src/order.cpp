@@ -71,6 +71,11 @@ void Order::craft(const Recipe &r, int amount) {
     }
 }
 
+static int calc_amount(const Recipe &r, const std::string &name, int amount) {
+    auto tmp = std::ranges::find(r.get_products(), name, &Ingredient::get_name);
+    return std::ceil(1. * amount / tmp->get_amount());
+}
+
 bool Order::create_item(const std::string &name, int amount,
                         std::set<std::string> visited, bool dry_run) {
     int have = state.has_item(name);
@@ -104,8 +109,10 @@ bool Order::create_item(const std::string &name, int amount,
         auto descend = [&](bool dry_run) {
             return std::ranges::all_of(
                 r.get_ingredients(), [&](const Ingredient &i) {
-                    return create_item(i.get_name(), i.get_amount() * amount,
-                                       visited, dry_run);
+                    return create_item(
+                        i.get_name(),
+                        calc_amount(r, name, i.get_amount() * amount), visited,
+                        dry_run);
                 });
         };
         if (!descend(true)) {
@@ -145,7 +152,7 @@ bool Order::create_item(const std::string &name, int amount,
                 throw std::logic_error("double you tee eff");
             }
             //std::clog << "using " << *good << std::endl;
-            craft(*good, amount); // TODO opt: amount / produced_amount
+            craft(*good, calc_amount(*good, name, amount));
         }
         return true;
     }

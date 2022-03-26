@@ -22,7 +22,6 @@ fid_t Order::add_factory(const Factory &f, bool init) {
     if (!init) {
         // BuildEvents are handled before StartEvents, so we don't need to
         // increment tick here.
-        std::clog << tick << f << fid << std::endl;
         order.push_back(std::make_shared<BuildEvent>(tick, f, fid));
         std::clog << "add_factory: " << order.back() << std::endl;
     }
@@ -49,7 +48,6 @@ bool Order::is_craftable(const Recipe &r) {
 }
 
 void Order::craft(const Recipe &r, int amount) {
-    std::clog << "crafting " << amount << " of " << r << std::endl;
     auto f = std::ranges::find_if(fid_map, [&](const auto &v) {
         return v.second->get_crafting_categories().contains(r.get_category());
     });
@@ -71,9 +69,23 @@ void Order::craft(const Recipe &r, int amount) {
     }
 }
 
-static int calc_amount(const Recipe &r, const std::string &name, int amount) {
-    auto tmp = std::ranges::find(r.get_products(), name, &Ingredient::get_name);
-    return std::ceil(1. * amount / tmp->get_amount());
+static int calc_execution_amount(const Recipe &r,
+                                 const std::string &product_name,
+                                 int product_amount) {
+    auto tmp = std::ranges::find(r.get_products(), product_name,
+                                 &Ingredient::get_name);
+    return std::ceil(1. * product_amount / tmp->get_amount());
+}
+
+static int calc_ingredient_amount(const Recipe &r,
+                                  const std::string &product_name,
+                                  int product_amount,
+                                  const std::string &ingredient_name) {
+    int execution_amount
+        = calc_execution_amount(r, product_name, product_amount);
+    auto tmp2 = std::ranges::find(r.get_ingredients(), ingredient_name,
+                                  &Ingredient::get_name);
+    return execution_amount * tmp2->get_amount();
 }
 
 bool Order::create_item(const std::string &name, int amount,
@@ -81,6 +93,13 @@ bool Order::create_item(const std::string &name, int amount,
     int have = state.has_item(name);
     std::clog << "working on " << amount << " of " << name << " (" << have
               << " available)" << (dry_run ? " DRY" : "") << std::endl;
+
+    if (creatable_items.contains(name)) {
+        std::clog << name << " is known to be creatable" << std::endl;
+        if (dry_run) {
+            return true;
+        }
+    }
     // If this item is in the inventory, use the available ones.
     amount -= have;
     if (amount <= 0) {
@@ -111,16 +130,18 @@ bool Order::create_item(const std::string &name, int amount,
                 r.get_ingredients(), [&](const Ingredient &i) {
                     return create_item(
                         i.get_name(),
-                        calc_amount(r, name, i.get_amount() * amount), visited,
-                        dry_run);
+                        calc_ingredient_amount(r, name, amount, i.get_name()),
+                        visited, dry_run);
                 });
         };
         if (!descend(true)) {
-            std::clog << "doesn't work" << std::endl;
+            std::clog << r << " doesn't work for " << name << std::endl;
             continue;
         }
         if (is_craftable(r)) {
             // Do nothing.
+        // TODO check if state.is_unlocked(r), if not, see if technology can be
+        // unlocked, opt: only create factory if technology is possible
         } else if (std::clog << name << std::endl,
                    create_factory(r.get_category(), visited, true)) {
             if (!dry_run) {
@@ -128,7 +149,7 @@ bool Order::create_item(const std::string &name, int amount,
             }
         } else {
             // No suitable factory can be created.
-            std::clog << "no suitable factory can be created" << std::endl;
+            std::clog << "no suitable factory can be created for " << r << std::endl;
             continue;
         }
         std::clog << "Recipe " << r.get_name() << " works for " << name
@@ -146,14 +167,18 @@ bool Order::create_item(const std::string &name, int amount,
             if (!is_craftable(*good)) {
                 throw std::logic_error("huh");
             }
-            std::clog << "actually creating " << good << std::endl;
+            std::clog << "actually crafting " << good << std::endl;
             if (!state.has_items(good->get_ingredients())) {
                 std::clog << "items: " << state.get_items() << std::endl;
                 throw std::logic_error("double you tee eff");
             }
+            if (!state.is_unlocked(*good)) {
+                throw std::logic_error("implement technologies plz");
+            }
             //std::clog << "using " << *good << std::endl;
-            craft(*good, calc_amount(*good, name, amount));
+            craft(*good, calc_execution_amount(*good, name, amount));
         }
+        creatable_items.insert(name);
         return true;
     }
 
@@ -178,7 +203,6 @@ bool Order::create_factory(const std::string &category,
         }
         std::clog << f << " works for " << category << std::endl;
         if (!dry_run) {
-            std::clog << "building " << f << std::endl;
             add_factory(f);
         }
         return true;

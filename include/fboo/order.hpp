@@ -45,8 +45,11 @@ private:
     long long tick;
     std::unordered_set<std::string> craftable_categories;
     std::unordered_set<std::string> craftable_items;
-    std::unordered_set<const Recipe *> craftable_recipes;
     game::State state;
     FactoryIdMap fid_map;
     EventList order;
+
+    // Memoization
+    std::unordered_set<const Recipe *> craftable_recipes;
+    std::unordered_set<std::string> creatable_items;
 };

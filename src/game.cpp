@@ -92,14 +92,15 @@ const Factory *State::build_factory(const Factory *f, bool consume) {
     if (consume) {
         remove_item(f->get_name());
     }
-    factories.insert(new Factory(*f));
+    // TODO maybe no new but instead multiset? or just vector...
+    //factories.insert(new Factory(*f));
     return f;
 }
 
 void State::destroy_factory(const Factory *f) {
-    factories.erase(f);
+    //factories.erase(f);
     add_item(f->get_name());
-    delete f;
+    //delete f; // TODO bad, the new'd factory is never returned
 }
 
 void Simulation::cancel_recipe(fid_t fid) {

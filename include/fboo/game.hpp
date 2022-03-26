@@ -36,7 +36,7 @@ public:
 
 private:
     std::unordered_map<std::string, int> items;
-    std::unordered_set<const Factory *> factories;
+    std::unordered_set<const Factory *> factories; // TODO kinda useless
 
     // TODO pointers? technologies and recipes are kinda singletons
     std::unordered_set<const Recipe *> unlocked_recipes;
@@ -73,7 +73,7 @@ private:
 
     long long tick = -1;
     State state;
-    std::unordered_map<std::string, int> goal_items;
+    std::unordered_map<std::string, int> goal_items; // TODO just use ItemList?
     std::deque<std::shared_ptr<Event>> events;
     // TODO mv these two to state?
     std::unordered_map<FactoryIdMap::fid_t, Recipe> active_factories;

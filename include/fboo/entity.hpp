@@ -69,7 +69,7 @@ template <size_t I>
 struct tuple_element<I, Ingredient> : tuple_element<I, tuple<string, int>> {};
 }  // namespace std
 
-using ItemList = std::vector<Ingredient>;
+using ItemList = std::vector<Ingredient>;  // TODO unordered_map
 
 class Recipe : public Entity {
 public:
@@ -86,7 +86,7 @@ public:
     std::string get_category() const { return category; }
     bool is_enabled() const { return enabled; }
     int get_energy() const { return energy; }
-    ItemList get_ingredients() const { return ingredients; }
+    const ItemList &get_ingredients() const { return ingredients; }
     const ItemList &get_products() const { return products; }
 
     void set_energy(int e) { energy = e; }
@@ -121,7 +121,7 @@ public:
 
 private:
     double crafting_speed;
-    std::set<std::string> crafting_categories;
+    std::set<std::string> crafting_categories; // TODO unordered?
     // TODO Recipe *executing_recipe ?
 };
 

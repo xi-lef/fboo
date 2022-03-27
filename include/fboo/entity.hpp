@@ -2,6 +2,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -132,27 +133,27 @@ public:
     Technology(std::string name, std::vector<std::string> prerequisites,
                ItemList ingredients, std::vector<std::string> unlocked_recipes)
         : Entity(name),
-          prerequisites(prerequisites),
+          prerequisites(prerequisites.begin(), prerequisites.end()),
           ingredients(ingredients),
-          unlocked_recipes(unlocked_recipes) {}
+          unlocked_recipes(unlocked_recipes.begin(), unlocked_recipes.end()) {}
 
     bool operator==(const Entity &o) const { return name == o.get_name(); }
 
     std::string to_string() const override;
-    const std::vector<std::string> &get_prerequisites() const {
+    const std::unordered_set<std::string> &get_prerequisites() const {
         return prerequisites;
     }
     const ItemList &get_ingredients() const { return ingredients; }
-    const std::vector<std::string> &get_unlocked_recipes() const {
+    const std::unordered_set<std::string> &get_unlocked_recipes() const {
         return unlocked_recipes;
     }
 
 private:
-    std::vector<std::string> prerequisites;
+    std::unordered_set<std::string> prerequisites;
     ItemList ingredients;
     // The only effect in the json-file is "unlock-recipe", so we simplify this
     // part.
-    std::vector<std::string> unlocked_recipes;
+    std::unordered_set<std::string> unlocked_recipes;
 };
 
 using TechnologyMap = std::unordered_map<std::string, Technology>;

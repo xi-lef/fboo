@@ -266,6 +266,10 @@ bool Order::create_technology(const Recipe &r, std::set<std::string> visited,
 
 bool Order::create_technology(const Technology &t,
                               std::set<std::string> visited, bool dry_run) {
+    if (state.is_unlocked(t)) {
+        return true;
+    }
+
     auto descend_prerequisites = [&](bool dry_run) {
         return std::ranges::all_of(
             t.get_prerequisites(), [&](const std::string &s) {

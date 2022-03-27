@@ -7,7 +7,9 @@ project(
   LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RelWithDebInfo)
+  set(CMAKE_BUILD_TYPE Release)
+  add_compile_options(-march=native)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
 add_compile_options(-Wall -Wextra -pedantic)

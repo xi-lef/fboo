@@ -39,7 +39,7 @@ bool State::has_items(const ItemList &list) const {
 }
 
 void State::add_item(const std::string &name, int amount) {
-    std::clog << "adding " << amount << "x " << name << std::endl;
+    //std::clog << "adding " << amount << "x " << name << std::endl;
     items[name] += amount;
     if (items[name] < 0) {
         throw std::invalid_argument("item amount must not be < 0");
@@ -116,7 +116,7 @@ void Simulation::cancel_recipe(fid_t fid) {
 void Simulation::build_factory(const BuildEvent *e, bool consume) {
     const Factory *f
         = state.build_factory(&all_factories.at(e->get_factory_type()), consume);
-    std::clog << "building " << f << std::endl;
+    //std::clog << "building " << f << std::endl;
     factory_id_map.insert(f, e->get_factory_id());
 }
 
@@ -133,24 +133,24 @@ long Simulation::simulate() {
 
     // Initialization: execute all (Build)Events with timestamp -1.
     // TODO use special value instead of -1
-    std::clog << "tick -1: initializing factories" << std::endl;
+    //std::clog << "tick -1: initializing factories" << std::endl;
     while (!events.empty() && events.front()->get_timestamp() == -1) {
         build_factory(dynamic_cast<const BuildEvent *>(events.front().get()),
                       false);
         events.pop_front();
     }
 
-    std::clog << "goal_items: " << goal_items << std::endl << std::endl;
+    //std::clog << "goal_items: " << goal_items << std::endl << std::endl;
 
     while (tick < victory_tick) {
         advance();
 
-        std::clog << "items after tick " << tick << ": " << state.get_items()
-                  << std::endl << std::endl;
+        //std::clog << "items after tick " << tick << ": " << state.get_items()
+        //          << std::endl << std::endl;
     }
 
-    std::clog << "done in tick " << tick << ", items: " << state.get_items()
-              << ", goal_items: " << goal_items << std::endl;
+    //std::clog << "done in tick " << tick << ", items: " << state.get_items()
+    //          << ", goal_items: " << goal_items << std::endl;
     return tick;
 }
 
@@ -166,7 +166,7 @@ void Simulation::advance() {
         cur_events.push_back(events.front().get());
         events.pop_front();
     }
-    std::clog << "tick " << tick << ", cur_events: " << cur_events << std::endl;
+    //std::clog << "tick " << tick << ", cur_events: " << cur_events << std::endl;
     std::vector<const ResearchEvent *> research_events;
     std::vector<const FactoryEvent *> other_events;
     if (!cur_events.empty()) {
@@ -187,14 +187,14 @@ void Simulation::advance() {
     // Step 3: work on (or finish) recipes.
     for (auto it = active_factories.begin(); it != active_factories.end(); ) {
         auto &[fid, r] = *it;
-        std::clog << "factory " << fid << ": ";
+        //std::clog << "factory " << fid << ": ";
         if (r.tick() == 0) {
-            std::clog << "finished " << r << std::endl;
+            //std::clog << "finished " << r << std::endl;
             state.add_items(r.get_products());
             starved_factories.insert({fid, r});  // Gather for step 10.
             it = active_factories.erase(it);
         } else {
-            std::clog << "working " << r << std::endl;
+            //std::clog << "working " << r << std::endl;
             ++it;
         }
     }
@@ -208,21 +208,21 @@ void Simulation::advance() {
             }
         }
 
-        std::clog << "unlocking " << technology << std::endl;
+        //std::clog << "unlocking " << technology << std::endl;
         state.unlock_technology(technology, all_recipes);
     }
 
     // Step 5: execute stop factory events.
     for (const StopEvent *e : extract_subclass<StopEvent>(other_events)) {
         fid_t fid = e->get_factory_id();
-        std::clog << "factory " << fid << ": stopping" << std::endl;
+        //std::clog << "factory " << fid << ": stopping" << std::endl;
         cancel_recipe(fid);
     }
 
     // Step 6: execute destroy factory events.
     for (const DestroyEvent *e : extract_subclass<DestroyEvent>(other_events)) {
         fid_t fid = e->get_factory_id();
-        std::clog << "factory " << fid << ": destroying" << std::endl;
+        //std::clog << "factory " << fid << ": destroying" << std::endl;
         cancel_recipe(fid);
         state.destroy_factory(factory_id_map.erase(fid));
     }
@@ -245,7 +245,7 @@ void Simulation::advance() {
             throw std::logic_error("recipe not yet unlocked");
         }
         Recipe r = all_recipes.at(e->get_recipe());
-        std::clog << "factory " << fid << ": commencing " << r << std::endl;
+        //std::clog << "factory " << fid << ": commencing " << r << std::endl;
         // Use insert_or_assign to potentially overwrite a recipe that was
         // inserted for fid in step 3.
         starved_factories.insert_or_assign(fid, r);  // Gather for step 10.
@@ -261,7 +261,7 @@ void Simulation::advance() {
             // r.energy is 0, so we need to get the actual required energy from
             // all_recipes. TODO meh
             r.set_energy(f->calc_ticks(all_recipes.at(r.get_name())));
-            std::clog << "factory " << fid << ": starting " << r << std::endl;
+            //std::clog << "factory " << fid << ": starting " << r << std::endl;
             active_factories.insert({fid, r});
             it = starved_factories.erase(it);
         } else {

@@ -173,8 +173,6 @@ int main(int argc, char *argv[]) {
                 initial_items, goal_items);
     EventList solution_events = order.compute();
     std::ranges::copy(solution_events, std::back_inserter(events));
-    std::clog << "solution events: " << solution_events << std::endl
-              << std::endl;
     std::cout << json(solution_events) << std::endl;
 
     if (argc == 3) {

@@ -51,5 +51,5 @@ private:
 
     // Memoization
     std::unordered_set<const Recipe *> craftable_recipes;
-    std::unordered_set<std::string> creatable_items;
+    std::unordered_map<std::string, const Recipe *> creatable_items;
 };

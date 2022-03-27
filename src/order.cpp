@@ -29,6 +29,8 @@ fid_t Order::add_factory(const Factory &f, bool init) {
 }
 
 bool Order::is_craftable(const Recipe &r) {
+    // TODO recursive lookup should be (and is) done in create_item, right?
+    return craftable_categories.contains(r.get_category());
     if (craftable_recipes.contains(&r)) {
         return true;
     }
@@ -99,6 +101,17 @@ bool Order::create_item(const std::string &name, int amount,
         if (dry_run) {
             return true;
         }
+        const Recipe *r = creatable_items[name];
+        for (const Ingredient &i : r->get_ingredients()) {
+            create_item(i.get_name(),
+                        calc_ingredient_amount(*r, name, amount, i.get_name()),
+                        visited, false);
+        }
+        if (!is_craftable(*r)) {
+            create_factory(r->get_category(), visited, false);
+        }
+        craft(*r, calc_execution_amount(*r, name, amount));
+        return true;
     }
     // If this item is in the inventory, use the available ones.
     amount -= have;
@@ -180,7 +193,7 @@ bool Order::create_item(const std::string &name, int amount,
             //std::clog << "using " << *good << std::endl;
             craft(*good, calc_execution_amount(*good, name, amount));
         }
-        creatable_items.insert(name);
+        creatable_items[name] = good;
         return true;
     }
 

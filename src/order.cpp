@@ -113,6 +113,9 @@ bool Order::create_item(const std::string &name, int amount,
                         calc_ingredient_amount(*r, name, amount, i.get_name()),
                         visited, false);
         }
+        if (!state.is_unlocked(*r)) {
+            create_technology(*r, visited, false);
+        }
         if (!is_craftable(*r)) {
             create_factory(r->get_category(), visited, false);
         }
@@ -147,13 +150,13 @@ bool Order::create_item(const std::string &name, int amount,
     for (const Recipe &r : options) {
         std::clog << "trying " << r << std::endl;
 
-        // Check if recipe is available. If not, the technology needs to be
-        // unlocked first.
+        // Check if recipe is unlocked. If not, the technology needs to be
+        // researched first.
         if (!state.is_unlocked(r)) {
             std::clog << "recipe is locked, trying technology" << std::endl;
-            if (create_technology(r, visited, true)) {
-                // TODO opt: do this after checking create_factory
-                create_technology(r, visited, false);
+            if (!create_technology(r, visited, true)) {
+                std::clog << "no technology worked for " << r << std::endl;
+                continue;
             }
         }
 
@@ -172,13 +175,9 @@ bool Order::create_item(const std::string &name, int amount,
         }
         if (is_craftable(r)) {
             // Do nothing.
-        // TODO check if state.is_unlocked(r), if not, see if technology can be
-        // unlocked, opt: only create factory if technology is possible
         } else if (std::clog << name << ": ",
                    create_factory(r.get_category(), visited, true)) {
-            if (!dry_run) {
-                create_factory(r.get_category(), visited, false);
-            }
+            // Do nothing.
         } else {
             // No suitable factory can be created.
             std::clog << "no suitable factory can be created for " << r << std::endl;
@@ -188,6 +187,12 @@ bool Order::create_item(const std::string &name, int amount,
                   << std::endl;
 
         if (!dry_run) {
+            if (!state.is_unlocked(r)) {
+                create_technology(r, visited, false);
+            }
+            if (!is_craftable(r)) {
+                create_factory(r.get_category(), visited, false);
+            }
             descend(false);
         }
         good = &r;

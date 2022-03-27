@@ -17,7 +17,6 @@ public:
           all_technologies(all_technologies),
           goal_items(goal_items),
           tick(0),
-          // factories(initial_factories),
           state(all_recipes) {
         state.add_items(initial_items);
         for (const Factory &f : initial_factories) {
@@ -56,6 +55,5 @@ private:
     EventList order;
 
     // Memoization
-    std::unordered_set<const Recipe *> craftable_recipes;
     std::unordered_map<std::string, const Recipe *> creatable_items;
 };

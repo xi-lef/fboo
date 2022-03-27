@@ -16,7 +16,6 @@ fid_t Order::add_factory(const Factory &f, bool init) {
     for (const std::string &s : f.get_crafting_categories()) {
         craftable_categories.insert(s);
     }
-    //std::clog << "craftable categories: " << craftable_categories << std::endl;
     state.build_factory(&f, !init);
 
     if (!init) {
@@ -35,24 +34,7 @@ void Order::add_technology(const Technology &t) {
 }
 
 bool Order::is_craftable(const Recipe &r) {
-    // TODO recursive lookup should be (and is) done in create_item, right?
     return craftable_categories.contains(r.get_category());
-    if (craftable_recipes.contains(&r)) {
-        return true;
-    }
-    // If all ingredients are craftable and we have a factory that can
-    // produce this item, this recipe is also craftable.
-    bool ret
-        = craftable_categories.contains(r.get_category())
-          && std::ranges::all_of(r.get_ingredients(), [&](const Ingredient &i) {
-                 // return craftable_items.contains(i.get_name());
-                 return is_craftable(all_recipes.at(i.get_name()));
-             });
-    if (ret) {
-        // Assume nothing ever becomes uncraftable again.
-        craftable_recipes.insert(&r);
-    }
-    return ret;
 }
 
 void Order::craft(const Recipe &r, int amount) {
@@ -60,7 +42,7 @@ void Order::craft(const Recipe &r, int amount) {
         return v.second->get_crafting_categories().contains(r.get_category());
     });
     if (f == fid_map.end()) {
-        throw std::logic_error("no factory exists for this category");
+        throw std::logic_error("no factory exists for this recipe");
     }
     order.push_back(std::make_shared<StartEvent>(tick, f->first, r));
     std::clog << "craft: " << order.back() << ", ";
@@ -91,9 +73,9 @@ static int calc_ingredient_amount(const Recipe &r,
                                   const std::string &ingredient_name) {
     int execution_amount
         = calc_execution_amount(r, product_name, product_amount);
-    auto tmp2 = std::ranges::find(r.get_ingredients(), ingredient_name,
-                                  &Ingredient::get_name);
-    return execution_amount * tmp2->get_amount();
+    auto tmp = std::ranges::find(r.get_ingredients(), ingredient_name,
+                                 &Ingredient::get_name);
+    return execution_amount * tmp->get_amount();
 }
 
 bool Order::create_item(const std::string &name, int amount,
@@ -107,19 +89,19 @@ bool Order::create_item(const std::string &name, int amount,
         if (dry_run) {
             return true;
         }
-        const Recipe *r = creatable_items[name];
-        for (const Ingredient &i : r->get_ingredients()) {
+        const Recipe &r = *creatable_items[name];
+        if (!state.is_unlocked(r)) {
+            create_technology(r, visited, false);
+        }
+        if (!is_craftable(r)) {
+            create_factory(r.get_category(), visited, false);
+        }
+        for (const Ingredient &i : r.get_ingredients()) {
             create_item(i.get_name(),
-                        calc_ingredient_amount(*r, name, amount, i.get_name()),
+                        calc_ingredient_amount(r, name, amount, i.get_name()),
                         visited, false);
         }
-        if (!state.is_unlocked(*r)) {
-            create_technology(*r, visited, false);
-        }
-        if (!is_craftable(*r)) {
-            create_factory(r->get_category(), visited, false);
-        }
-        craft(*r, calc_execution_amount(*r, name, amount));
+        craft(r, calc_execution_amount(r, name, amount));
         return true;
     }
     // If this item is in the inventory, use the available ones.
@@ -128,8 +110,8 @@ bool Order::create_item(const std::string &name, int amount,
         return true;
     }
 
+    // Avoid dependency-cycles (i.e., an item depends on itself).
     if (visited.contains(name)) {
-        // cycle (?)
         return false;
     }
     visited.insert(name);
@@ -153,9 +135,9 @@ bool Order::create_item(const std::string &name, int amount,
         // Check if recipe is unlocked. If not, the technology needs to be
         // researched first.
         if (!state.is_unlocked(r)) {
-            std::clog << "recipe is locked, trying technology" << std::endl;
+            std::clog << "recipe is locked, trying research" << std::endl;
             if (!create_technology(r, visited, true)) {
-                std::clog << "no technology worked for " << r << std::endl;
+                std::clog << "technology didn't worked for " << r << std::endl;
                 continue;
             }
         }
@@ -173,18 +155,13 @@ bool Order::create_item(const std::string &name, int amount,
             std::clog << r << " doesn't work for " << name << std::endl;
             continue;
         }
-        if (is_craftable(r)) {
-            // Do nothing.
-        } else if (std::clog << name << ": ",
-                   create_factory(r.get_category(), visited, true)) {
-            // Do nothing.
-        } else {
+        if (!is_craftable(r)
+            && !create_factory(r.get_category(), visited, true)) {
             // No suitable factory can be created.
             std::clog << "no suitable factory can be created for " << r << std::endl;
             continue;
         }
-        std::clog << "Recipe " << r.get_name() << " works for " << name
-                  << std::endl;
+        std::clog << r << " works for " << name << std::endl;
 
         if (!dry_run) {
             if (!state.is_unlocked(r)) {
@@ -202,17 +179,6 @@ bool Order::create_item(const std::string &name, int amount,
     if (good) {
         if (!dry_run) {
             std::clog << "actually crafting " << good << std::endl;
-            if (!is_craftable(*good)) {
-                throw std::logic_error("huh");
-            }
-            if (!state.has_items(good->get_ingredients())) {
-                std::clog << "items: " << state.get_items() << std::endl;
-                throw std::logic_error("double you tee eff");
-            }
-            if (!state.is_unlocked(*good)) {
-                throw std::logic_error("implement technologies plz");
-            }
-            //std::clog << "using " << *good << std::endl;
             craft(*good, calc_execution_amount(*good, name, amount));
         }
         creatable_items[name] = good;
@@ -231,11 +197,11 @@ bool Order::create_factory(const std::string &category,
         if (!f.get_crafting_categories().contains(category)) {
             continue;
         }
-        std::clog << "trying " << f << std::endl;
         if (!all_recipes.contains(fname)) {
             continue;  // Skip player.
         }
 
+        std::clog << "trying " << f << std::endl;
         if (!create_item(fname, 1, visited, dry_run)) {
             continue;
         }
@@ -250,23 +216,25 @@ bool Order::create_factory(const std::string &category,
 
 bool Order::create_technology(const Recipe &r, std::set<std::string> visited,
                               bool dry_run) {
-    std::clog << "working on technology for " << r
-              << (dry_run ? " DRY" : "") << std::endl;
-    // TODO there seems to be only one technology for each recipe
-    for (const auto &[tname, t] : all_technologies) {
-        if (!t.get_unlocked_recipes().contains(r.get_name())) {
-            continue;
-        }
-        std::clog << "trying " << t << std::endl;
-        if (create_technology(t, visited, true)) {
-            std::clog << t << " works for " << r << std::endl;
-            if (!dry_run) {
-                create_technology(t, visited, false);
-            }
-            return true;
-        }
+    std::clog << "working on technology for " << r << (dry_run ? " DRY" : "")
+              << std::endl;
+    auto tmp = std::ranges::find_if(all_technologies, [&](const auto &t) {
+        return t.second.get_unlocked_recipes().contains(r.get_name());
+    });
+    if (tmp == all_technologies.end()) {
+        throw std::logic_error("no technology found for this recipe");
     }
-    return false;
+
+    const Technology &t = tmp->second;
+    std::clog << "trying " << t << std::endl;
+    if (!create_technology(t, visited, true)) {
+        return false;
+    }
+    std::clog << t << " works for " << r << std::endl;
+    if (!dry_run) {
+        create_technology(t, visited, false);
+    }
+    return true;
 }
 
 bool Order::create_technology(const Technology &t,
@@ -275,6 +243,9 @@ bool Order::create_technology(const Technology &t,
         return true;
     }
 
+    // Check if all prerequisites can be (or already are) researched, and if all
+    // ingredients can be created. Only if everything works, we actually create
+    // the technology.
     auto descend_prerequisites = [&](bool dry_run) {
         return std::ranges::all_of(
             t.get_prerequisites(), [&](const std::string &s) {

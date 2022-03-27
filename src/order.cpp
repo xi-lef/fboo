@@ -28,6 +28,12 @@ fid_t Order::add_factory(const Factory &f, bool init) {
     return fid;
 }
 
+void Order::add_technology(const Technology &t) {
+    state.unlock_technology(t, all_recipes);
+    order.push_back(std::make_shared<ResearchEvent>(tick, t.get_name()));
+    std::clog << "add_technology: " << order.back() << std::endl;
+}
+
 bool Order::is_craftable(const Recipe &r) {
     // TODO recursive lookup should be (and is) done in create_item, right?
     return craftable_categories.contains(r.get_category());
@@ -140,6 +146,17 @@ bool Order::create_item(const std::string &name, int amount,
     const Recipe *good = nullptr;
     for (const Recipe &r : options) {
         std::clog << "trying " << r << std::endl;
+
+        // Check if recipe is available. If not, the technology needs to be
+        // unlocked first.
+        if (!state.is_unlocked(r)) {
+            std::clog << "recipe is locked, trying technology" << std::endl;
+            if (create_technology(r, visited, true)) {
+                // TODO opt: do this after checking create_factory
+                create_technology(r, visited, false);
+            }
+        }
+
         auto descend = [&](bool dry_run) {
             return std::ranges::all_of(
                 r.get_ingredients(), [&](const Ingredient &i) {
@@ -200,6 +217,7 @@ bool Order::create_item(const std::string &name, int amount,
     return false;
 }
 
+// TODO try without visited? shouldnt work tho (lol)
 bool Order::create_factory(const std::string &category,
                            std::set<std::string> visited, bool dry_run) {
     std::clog << "working on factory for " << category
@@ -223,6 +241,59 @@ bool Order::create_factory(const std::string &category,
         return true;
     }
     return false;
+}
+
+bool Order::create_technology(const Recipe &r, std::set<std::string> visited,
+                              bool dry_run) {
+    std::clog << "working on technology for " << r
+              << (dry_run ? " DRY" : "") << std::endl;
+    // TODO there seems to be only one technology for each recipe
+    for (const auto &[tname, t] : all_technologies) {
+        if (!t.get_unlocked_recipes().contains(r.get_name())) {
+            continue;
+        }
+        std::clog << "trying " << t << std::endl;
+        if (create_technology(t, visited, true)) {
+            std::clog << t << " works for " << r << std::endl;
+            if (!dry_run) {
+                create_technology(t, visited, false);
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Order::create_technology(const Technology &t,
+                              std::set<std::string> visited, bool dry_run) {
+    auto descend_prerequisites = [&](bool dry_run) {
+        return std::ranges::all_of(
+            t.get_prerequisites(), [&](const std::string &s) {
+                return create_technology(all_technologies.at(s), visited,
+                                         dry_run);
+            });
+    };
+    if (!descend_prerequisites(true)) {
+        return false;
+    }
+
+    auto descend_ingredients = [&](bool dry_run) {
+        return std::ranges::all_of(
+            t.get_ingredients(), [&](const Ingredient &i) {
+                return create_item(i.get_name(), i.get_amount(), visited,
+                                   dry_run);
+            });
+    };
+    if (!descend_ingredients(true)) {
+        return false;
+    }
+
+    if (!dry_run) {
+        descend_prerequisites(false);
+        descend_ingredients(false);
+        add_technology(t);
+    }
+    return true;
 }
 
 EventList Order::compute() {

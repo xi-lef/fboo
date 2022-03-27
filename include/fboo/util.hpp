@@ -1,4 +1,5 @@
 #pragma once
+#include <deque>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -40,6 +41,7 @@ std::ostream &operator<<(std::ostream &os, const T &t) {
 
 template <class It>
 requires is_specialization<It, std::vector>
+      || is_specialization<It, std::deque>
 std::ostream &operator<<(std::ostream &os, const It &it) {
     if (it.empty()) {
         return os << "[]";

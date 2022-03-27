@@ -119,6 +119,8 @@ bool Order::create_item(const std::string &name, int amount,
                 return std::ranges::find(p, name, &Ingredient::get_name)
                        != p.end();
             });
+    // TODO opt?
+    //std::ranges::sort(options, {}, [&](const Recipe &r) { return is_craftable(r); });
 
     // We need to craft each ingredient separately, going to the cases below for
     // some (or all) ingredients in the recursive call.
@@ -142,7 +144,7 @@ bool Order::create_item(const std::string &name, int amount,
             // Do nothing.
         // TODO check if state.is_unlocked(r), if not, see if technology can be
         // unlocked, opt: only create factory if technology is possible
-        } else if (std::clog << name << std::endl,
+        } else if (std::clog << name << ": ",
                    create_factory(r.get_category(), visited, true)) {
             if (!dry_run) {
                 create_factory(r.get_category(), visited, false);
@@ -164,10 +166,10 @@ bool Order::create_item(const std::string &name, int amount,
 
     if (good) {
         if (!dry_run) {
+            std::clog << "actually crafting " << good << std::endl;
             if (!is_craftable(*good)) {
                 throw std::logic_error("huh");
             }
-            std::clog << "actually crafting " << good << std::endl;
             if (!state.has_items(good->get_ingredients())) {
                 std::clog << "items: " << state.get_items() << std::endl;
                 throw std::logic_error("double you tee eff");

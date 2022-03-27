@@ -93,6 +93,7 @@ auto init_entities() {
 
     events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
     events.push_back(std::make_shared<StopEvent>(60, 0));
+    events.push_back(std::make_shared<VictoryEvent>(60));
     std::clog << events << std::endl;
 
     const auto [items, recipes, factories, technologies] = init_entities();
@@ -126,15 +127,14 @@ auto init_entities() {
     events.push_back(std::make_shared<BuildEvent>(120, "stone-furnace",
                                                   "iron-smelter", 2));
     events.push_back(std::make_shared<StartEvent>(120, 2, "iron-plate-burner"));
+    events.push_back(std::make_shared<VictoryEvent>(6600));
     std::clog << events << std::endl;
 
     const auto [items, recipes, factories, technologies] = init_entities();
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items, initial_items);
     long tick = sim.simulate();
-    // solution-2.json has the VictoryEvent at tick 6600, but it is already
-    // possible as early as tick 6132.
-    if (tick != 6132) {
+    if (tick != 6600) {
         std::cerr << "challenge 2 failed, got tick " << tick << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -143,8 +143,9 @@ auto init_entities() {
 }  // namespace
 
 int main(int argc, char *argv[]) {
-    if (argc < 2 || argc > 3) {
-        std::cerr << "usage: " << argv[0] << " target.json [--debug]" << std::endl;
+    if (argc != 2 && argc != 3) {
+        std::cerr << "usage: " << argv[0] << " target.json [--run-simulation]"
+                  << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -174,14 +175,11 @@ int main(int argc, char *argv[]) {
     std::ranges::copy(solution_events, std::back_inserter(events));
     std::clog << "solution events: " << solution_events << std::endl
               << std::endl;
-
-    if (argc != 3) {
-        std::clog.setstate(std::ios_base::failbit);
-    }
-    game::Simulation sim(items, recipes, factories, technologies, events,
-                         goal_items, initial_items);
-    long tick = sim.simulate();
-    solution_events.push_back(std::make_shared<VictoryEvent>(tick));
-
     std::cout << json(solution_events) << std::endl;
+
+    if (argc == 3) {
+        game::Simulation sim(items, recipes, factories, technologies, events,
+                             goal_items, initial_items);
+        sim.simulate();
+    }
 }

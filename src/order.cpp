@@ -280,5 +280,9 @@ EventList Order::compute() {
     for (const auto &[name, amount] : goal_items) {
         create_item(name, amount);
     }
+
+    // Victory is achieved in the same tick as the last event.
+    order.push_back(
+        std::make_shared<VictoryEvent>(order.back()->get_timestamp()));
     return order;
 }

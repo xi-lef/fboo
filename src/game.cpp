@@ -121,6 +121,14 @@ void Simulation::build_factory(const BuildEvent *e, bool consume) {
 }
 
 long Simulation::simulate() {
+    auto victory
+        = std::ranges::find(events, VictoryEvent::type, &Event::get_type);
+    if (victory == events.end()) {
+        throw std::logic_error("no VictoryEvent found in EventList");
+    }
+    long victory_tick = victory->get()->get_timestamp();
+    events.erase(victory);
+
     std::ranges::sort(events, {}, &Event::get_timestamp);
 
     // Initialization: execute all (Build)Events with timestamp -1.
@@ -134,10 +142,7 @@ long Simulation::simulate() {
 
     std::clog << "goal_items: " << goal_items << std::endl << std::endl;
 
-    // Advance the simulation until all goal items are sufficiently available.
-    while (std::ranges::any_of(goal_items, [&](const auto &v) {
-        return state.has_item(v.first) < v.second;
-    })) {
+    while (tick < victory_tick) {
         advance();
 
         std::clog << "items after tick " << tick << ": " << state.get_items()
@@ -222,10 +227,11 @@ void Simulation::advance() {
         state.destroy_factory(factory_id_map.erase(fid));
     }
 
-    // Step 7: handle victory event. This is handled in simulate by checking if
-    // all goal items are available, in which case the simulation terminates.
+    // Step 7: handle victory event. This is handled in simulate via the
+    // while-condition. Executing the remaining steps in the victory-tick is
+    // more or less irrelevant.
 
-    // Step 8: Handle build factory events.
+    // Step 8: handle build factory events.
     for (const BuildEvent *e : extract_subclass<BuildEvent>(other_events)) {
         build_factory(e);
     }

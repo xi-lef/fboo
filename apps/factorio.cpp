@@ -98,7 +98,7 @@ auto init_entities() {
     const auto [items, recipes, factories, technologies] = init_entities();
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items, initial_items);
-    long long tick = sim.simulate();
+    long tick = sim.simulate();
     if (tick != 60) {
         std::cerr << "challenge 1 failed, got tick " << tick << std::endl;
         exit(EXIT_FAILURE);
@@ -131,7 +131,7 @@ auto init_entities() {
     const auto [items, recipes, factories, technologies] = init_entities();
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items, initial_items);
-    long long tick = sim.simulate();
+    long tick = sim.simulate();
     // solution-2.json has the VictoryEvent at tick 6600, but it is already
     // possible as early as tick 6132.
     if (tick != 6132) {
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
     }
     game::Simulation sim(items, recipes, factories, technologies, events,
                          goal_items, initial_items);
-    long long tick = sim.simulate();
+    long tick = sim.simulate();
     solution_events.push_back(std::make_shared<VictoryEvent>(tick));
 
     std::cout << json(solution_events) << std::endl;

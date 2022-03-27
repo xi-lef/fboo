@@ -120,7 +120,7 @@ void Simulation::build_factory(const BuildEvent *e, bool consume) {
     factory_id_map.insert(f, e->get_factory_id());
 }
 
-long long Simulation::simulate() {
+long Simulation::simulate() {
     std::ranges::sort(events, {}, &Event::get_timestamp);
 
     // Initialization: execute all (Build)Events with timestamp -1.

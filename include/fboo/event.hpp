@@ -6,17 +6,17 @@
 
 class Event {
 public:
-    Event(int timestamp) : timestamp(timestamp) {}
+    Event(long timestamp) : timestamp(timestamp) {}
     virtual ~Event() = default;
 
     // TODO as_json is bad, duplicate code, but idk how to fix it
     virtual nlohmann::json as_json() const { throw std::bad_function_call(); }
     virtual std::string to_string() const;
     virtual std::string get_type() const { throw std::bad_function_call(); }
-    int get_timestamp() const { return timestamp; }
+    long get_timestamp() const { return timestamp; }
 
 protected:
-    int timestamp;
+    long timestamp;
 };
 
 using EventList = std::vector<std::shared_ptr<Event>>;
@@ -26,7 +26,7 @@ class ResearchEvent : public Event {
 public:
     inline static std::string type = "research-event";
 
-    ResearchEvent(int timestamp, std::string technology)
+    ResearchEvent(long timestamp, std::string technology)
         : Event(timestamp), technology(technology) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ResearchEvent, type, timestamp, technology);
@@ -46,7 +46,7 @@ private:
 
 class FactoryEvent : public Event {
 public:
-    FactoryEvent(int timestamp, FactoryIdMap::fid_t factory_id)
+    FactoryEvent(long timestamp, FactoryIdMap::fid_t factory_id)
         : Event(timestamp), factory_id(factory_id) {}
 
     virtual std::string to_string() const override;
@@ -60,13 +60,13 @@ class BuildEvent : public FactoryEvent {
 public:
     inline static std::string type = "build-factory-event";
 
-    BuildEvent(int timestamp, std::string type, std::string name,
+    BuildEvent(long timestamp, std::string type, std::string name,
                FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id),
           factory_type(type),
           factory_name(name) {}
 
-    BuildEvent(int timestamp, const Factory &factory,
+    BuildEvent(long timestamp, const Factory &factory,
                FactoryIdMap::fid_t factory_id)
         : BuildEvent(timestamp, factory.get_name(), factory.to_string(),
                      factory_id) {}
@@ -93,7 +93,7 @@ class DestroyEvent : public FactoryEvent {
 public:
     inline static std::string type = "destroy-destroy-event";
 
-    DestroyEvent(int timestamp, FactoryIdMap::fid_t factory_id)
+    DestroyEvent(long timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(DestroyEvent, type, timestamp, factory_id);
@@ -110,11 +110,11 @@ class StartEvent : public FactoryEvent {
 public:
     inline static std::string type = "start-factory-event";
 
-    StartEvent(int timestamp, FactoryIdMap::fid_t factory_id,
+    StartEvent(long timestamp, FactoryIdMap::fid_t factory_id,
                const Recipe &recipe)
         : StartEvent(timestamp, factory_id, recipe.get_name()) {}
 
-    StartEvent(int timestamp, FactoryIdMap::fid_t factory_id,
+    StartEvent(long timestamp, FactoryIdMap::fid_t factory_id,
                std::string recipe)
         : FactoryEvent(timestamp, factory_id), recipe(recipe) {}
 
@@ -138,7 +138,7 @@ class StopEvent : public FactoryEvent {
 public:
     inline static std::string type = "stop-factory-event";
 
-    StopEvent(int timestamp, FactoryIdMap::fid_t factory_id)
+    StopEvent(long timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(StopEvent, type, timestamp, factory_id);
@@ -155,7 +155,7 @@ class VictoryEvent : public Event {
 public:
     inline static std::string type = "victory-event";
 
-    VictoryEvent(int timestamp) : Event(timestamp) {}
+    VictoryEvent(long timestamp) : Event(timestamp) {}
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(VictoryEvent, type, timestamp);
 

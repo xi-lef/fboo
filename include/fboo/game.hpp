@@ -62,7 +62,7 @@ public:
         state.add_items(initial_items);
     }
 
-    long long simulate();
+    long simulate();
 
 private:
     // Does nothing if "fid" is not a known factory.
@@ -71,7 +71,7 @@ private:
 
     void advance();
 
-    long long tick = -1;
+    long tick = -1;
     State state;
     std::unordered_map<std::string, int> goal_items; // TODO just use ItemList?
     std::deque<std::shared_ptr<Event>> events;

@@ -42,7 +42,7 @@ private:
     const TechnologyMap &all_technologies;
     const ItemList &goal_items;
 
-    long long tick;
+    long tick;
     std::unordered_set<std::string> craftable_categories;
     std::unordered_set<std::string> craftable_items;
     game::State state;

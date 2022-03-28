@@ -166,8 +166,10 @@ public:
         insert_checked(f, count);
         return count++;
     }
+    // This version also increments the internal count by one.
     fid_t insert(const Factory *f, fid_t fid) {
         insert_checked(f, fid);
+        ++count;
         return fid;
     }
     const Factory *erase(fid_t fid) {

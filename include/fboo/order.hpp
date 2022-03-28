@@ -27,7 +27,8 @@ public:
     EventList compute();
 
 private:
-    FactoryIdMap::fid_t add_factory(const Factory &f, bool init = false);
+    FactoryIdMap::fid_t add_factory(const Factory &f, bool init = false,
+                                    FactoryIdMap::fid_t fid = 0);
     void add_technology(const Technology &t);
     bool is_craftable(const Recipe &r);
     void craft(const Recipe &r, int amount = 1);

@@ -11,19 +11,22 @@
 
 using fid_t = FactoryIdMap::fid_t;
 
-fid_t Order::add_factory(const Factory &f, bool init) {
-    fid_t fid = fid_map.insert(&f);  // TODO only works for player (for initial_factories)
-    for (const std::string &s : f.get_crafting_categories()) {
-        craftable_categories.insert(s);
-    }
-    state.build_factory(&f, !init);
+fid_t Order::add_factory(const Factory &f, bool init, fid_t fid) {
+    if (init) {
+        fid_map.insert(&f, fid);
+    } else {
+        fid = fid_map.insert(&f);
 
-    if (!init) {
         // BuildEvents are handled before StartEvents, so we don't need to
         // increment tick here.
         order.push_back(std::make_shared<BuildEvent>(tick, f, fid));
         //std::clog << "add_factory: " << order.back() << std::endl;
     }
+    for (const std::string &s : f.get_crafting_categories()) {
+        craftable_categories.insert(s);
+    }
+    state.build_factory(&f, !init);
+
     return fid;
 }
 

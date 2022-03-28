@@ -71,8 +71,14 @@ public:
         : BuildEvent(timestamp, factory.get_name(), factory.to_string(),
                      factory_id) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(BuildEvent, type, timestamp, factory_id,
-                                   factory_type, factory_name);
+    friend void to_json(nlohmann::json &j, const BuildEvent &e) {
+        // Replace '_' with '-' for the necessary fields.
+        j = nlohmann::json{{"type", e.type},
+                           {"timestamp", e.timestamp},
+                           {"factory-id", e.factory_id},
+                           {"factory-type", e.factory_type},
+                           {"factory-name", e.factory_name}};
+    }
 
     nlohmann::json as_json() const override {
         nlohmann::json j;
@@ -96,7 +102,12 @@ public:
     DestroyEvent(long timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(DestroyEvent, type, timestamp, factory_id);
+    friend void to_json(nlohmann::json &j, const DestroyEvent &e) {
+        // Replace '_' with '-' for the necessary fields.
+        j = nlohmann::json{{"type", e.type},
+                           {"timestamp", e.timestamp},
+                           {"factory-id", e.factory_id}};
+    }
 
     nlohmann::json as_json() const override {
         nlohmann::json j;
@@ -118,8 +129,13 @@ public:
                std::string recipe)
         : FactoryEvent(timestamp, factory_id), recipe(recipe) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StartEvent, type, timestamp, factory_id,
-                                   recipe);
+    friend void to_json(nlohmann::json &j, const StartEvent &e) {
+        // Replace '_' with '-' for the necessary fields.
+        j = nlohmann::json{{"type", e.type},
+                           {"timestamp", e.timestamp},
+                           {"factory-id", e.factory_id},
+                           {"recipe", e.recipe}};
+    }
 
     nlohmann::json as_json() const override {
         nlohmann::json j;
@@ -141,7 +157,12 @@ public:
     StopEvent(long timestamp, FactoryIdMap::fid_t factory_id)
         : FactoryEvent(timestamp, factory_id) {}
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(StopEvent, type, timestamp, factory_id);
+    friend void to_json(nlohmann::json &j, const StopEvent &e) {
+        // Replace '_' with '-' for the necessary fields.
+        j = nlohmann::json{{"type", e.type},
+                           {"timestamp", e.timestamp},
+                           {"factory-id", e.factory_id}};
+    }
 
     nlohmann::json as_json() const override {
         nlohmann::json j;

@@ -11,6 +11,10 @@
 
 using fid_t = FactoryIdMap::fid_t;
 
+bool Order::is_factory_available(const Recipe &r) {
+    return craftable_categories.contains(r.get_category());
+}
+
 fid_t Order::add_factory(const Factory &f, bool init, fid_t fid) {
     if (init) {
         fid_map.insert(&f, fid);
@@ -36,11 +40,7 @@ void Order::add_technology(const Technology &t) {
     //std::clog << "add_technology: " << order.back() << std::endl;
 }
 
-bool Order::is_craftable(const Recipe &r) {
-    return craftable_categories.contains(r.get_category());
-}
-
-void Order::craft(const Recipe &r, int amount) {
+void Order::add_recipe(const Recipe &r, int amount) {
     auto f = std::ranges::find_if(fid_map, [&](const auto &v) {
         return v.second->get_crafting_categories().contains(r.get_category());
     });
@@ -62,7 +62,8 @@ void Order::craft(const Recipe &r, int amount) {
     }
 }
 
-static int calc_execution_amount(const Recipe &r,
+namespace {
+int calc_execution_amount(const Recipe &r,
                                  const std::string &product_name,
                                  int product_amount) {
     auto tmp = std::ranges::find(r.get_products(), product_name,
@@ -70,7 +71,7 @@ static int calc_execution_amount(const Recipe &r,
     return std::ceil(1. * product_amount / tmp->get_amount());
 }
 
-static int calc_ingredient_amount(const Recipe &r,
+int calc_ingredient_amount(const Recipe &r,
                                   const std::string &product_name,
                                   int product_amount,
                                   const std::string &ingredient_name) {
@@ -80,11 +81,12 @@ static int calc_ingredient_amount(const Recipe &r,
                                  &Ingredient::get_name);
     return execution_amount * tmp->get_amount();
 }
+}
 
-bool Order::create_recipe(const Recipe &r, const std::string &name, int amount,
-                          std::set<std::string> visited, bool dry_run) {
+bool Order::craft_recipe(const Recipe &r, const std::string &name, int amount,
+                         std::set<std::string> visited, bool dry_run) {
     if (state.is_unlocked(r) || create_technology(r, visited, dry_run)) {
-        if (is_craftable(r)
+        if (is_factory_available(r)
             || create_factory(r.get_category(), visited, dry_run)) {
             // (Try to) create all ingredients.
             if (std::ranges::all_of(
@@ -95,7 +97,7 @@ bool Order::create_recipe(const Recipe &r, const std::string &name, int amount,
                                            visited, dry_run);
                     })) {
                 if (!dry_run) {
-                    craft(r, calc_execution_amount(r, name, amount));
+                    add_recipe(r, calc_execution_amount(r, name, amount));
                 }
                 creatable_items[name] = &r;
                 return true;
@@ -114,7 +116,7 @@ bool Order::create_item(const std::string &name, int amount,
     if (creatable_items.contains(name)) {
         //std::clog << name << " is known to be creatable" << std::endl;
         if (!dry_run) {
-            create_recipe(*creatable_items[name], name, amount, visited, false);
+            craft_recipe(*creatable_items[name], name, amount, visited, false);
         }
         return true;
     }
@@ -144,9 +146,9 @@ bool Order::create_item(const std::string &name, int amount,
     // some (or all) ingredients in the recursive call.
     for (const Recipe &r : options) {
         // std::clog << "trying " << r << std::endl;
-        if (create_recipe(r, name, amount, visited, true)) {
+        if (craft_recipe(r, name, amount, visited, true)) {
             if (!dry_run) {
-                create_recipe(r, name, amount, visited, false);
+                craft_recipe(r, name, amount, visited, false);
             }
             return true;
         }

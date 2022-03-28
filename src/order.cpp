@@ -160,22 +160,14 @@ bool Order::create_factory(const std::string &category,
     //std::clog << "working on factory for " << category
     //          << (dry_run ? " DRY" : "") << std::endl;
     for (const auto &[fname, f] : all_factories) {
-        if (!f.get_crafting_categories().contains(category)) {
-            continue;
+        if (f.get_crafting_categories().contains(category)
+            && all_recipes.contains(fname)  // Skip player.
+            && create_item(fname, 1, visited, dry_run)) {
+            if (!dry_run) {
+                add_factory(f);
+            }
+            return true;
         }
-        if (!all_recipes.contains(fname)) {
-            continue;  // Skip player.
-        }
-
-        //std::clog << "trying " << f << std::endl;
-        if (!create_item(fname, 1, visited, dry_run)) {
-            continue;
-        }
-        //std::clog << f << " works for " << category << std::endl;
-        if (!dry_run) {
-            add_factory(f);
-        }
-        return true;
     }
     return false;
 }

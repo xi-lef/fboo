@@ -32,6 +32,10 @@ private:
     void add_technology(const Technology &t);
     bool is_craftable(const Recipe &r);
     void craft(const Recipe &r, int amount = 1);
+
+    bool create_recipe(const Recipe &r, const std::string &name, int amount,
+                       std::set<std::string> visited = {},
+                       bool dry_run = false);
     bool create_item(const std::string &name, int amount,
                      std::set<std::string> visited = {}, bool dry_run = false);
     bool create_factory(const std::string &category,

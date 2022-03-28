@@ -81,6 +81,30 @@ static int calc_ingredient_amount(const Recipe &r,
     return execution_amount * tmp->get_amount();
 }
 
+bool Order::create_recipe(const Recipe &r, const std::string &name, int amount,
+                          std::set<std::string> visited, bool dry_run) {
+    if (state.is_unlocked(r) || create_technology(r, visited, dry_run)) {
+        if (is_craftable(r)
+            || create_factory(r.get_category(), visited, dry_run)) {
+            // (Try to) create all ingredients.
+            if (std::ranges::all_of(
+                    r.get_ingredients(), [&](const Ingredient &i) {
+                        return create_item(i.get_name(),
+                                           calc_ingredient_amount(
+                                               r, name, amount, i.get_name()),
+                                           visited, dry_run);
+                    })) {
+                if (!dry_run) {
+                    craft(r, calc_execution_amount(r, name, amount));
+                }
+                creatable_items[name] = &r;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool Order::create_item(const std::string &name, int amount,
                         std::set<std::string> visited, bool dry_run) {
     int have = state.has_item(name);
@@ -89,22 +113,9 @@ bool Order::create_item(const std::string &name, int amount,
 
     if (creatable_items.contains(name)) {
         //std::clog << name << " is known to be creatable" << std::endl;
-        if (dry_run) {
-            return true;
+        if (!dry_run) {
+            create_recipe(*creatable_items[name], name, amount, visited, false);
         }
-        const Recipe &r = *creatable_items[name];
-        if (!state.is_unlocked(r)) {
-            create_technology(r, visited, false);
-        }
-        if (!is_craftable(r)) {
-            create_factory(r.get_category(), visited, false);
-        }
-        for (const Ingredient &i : r.get_ingredients()) {
-            create_item(i.get_name(),
-                        calc_ingredient_amount(r, name, amount, i.get_name()),
-                        visited, false);
-        }
-        craft(r, calc_execution_amount(r, name, amount));
         return true;
     }
     // If this item is in the inventory, use the available ones.
@@ -131,67 +142,19 @@ bool Order::create_item(const std::string &name, int amount,
 
     // We need to craft each ingredient separately, going to the cases below for
     // some (or all) ingredients in the recursive call.
-    const Recipe *good = nullptr;
     for (const Recipe &r : options) {
-        //std::clog << "trying " << r << std::endl;
-
-        // Check if recipe is unlocked. If not, the technology needs to be
-        // researched first.
-        if (!state.is_unlocked(r)) {
-            //std::clog << "recipe is locked, trying research" << std::endl;
-            if (!create_technology(r, visited, true)) {
-                //std::clog << "technology didn't worked for " << r << std::endl;
-                continue;
+        // std::clog << "trying " << r << std::endl;
+        if (create_recipe(r, name, amount, visited, true)) {
+            if (!dry_run) {
+                create_recipe(r, name, amount, visited, false);
             }
+            return true;
         }
-
-        auto descend = [&](bool dry_run) {
-            return std::ranges::all_of(
-                r.get_ingredients(), [&](const Ingredient &i) {
-                    return create_item(
-                        i.get_name(),
-                        calc_ingredient_amount(r, name, amount, i.get_name()),
-                        visited, dry_run);
-                });
-        };
-        if (!descend(true)) {
-            //std::clog << r << " doesn't work for " << name << std::endl;
-            continue;
-        }
-        if (!is_craftable(r)
-            && !create_factory(r.get_category(), visited, true)) {
-            // No suitable factory can be created.
-            //std::clog << "no suitable factory can be created for " << r << std::endl;
-            continue;
-        }
-        //std::clog << r << " works for " << name << std::endl;
-
-        if (!dry_run) {
-            if (!state.is_unlocked(r)) {
-                create_technology(r, visited, false);
-            }
-            if (!is_craftable(r)) {
-                create_factory(r.get_category(), visited, false);
-            }
-            descend(false);
-        }
-        good = &r;
-        break;
-    }
-
-    if (good) {
-        if (!dry_run) {
-            //std::clog << "actually crafting " << good << std::endl;
-            craft(*good, calc_execution_amount(*good, name, amount));
-        }
-        creatable_items[name] = good;
-        return true;
     }
 
     return false;
 }
 
-// TODO try without visited? shouldnt work tho (lol)
 bool Order::create_factory(const std::string &category,
                            std::set<std::string> visited, bool dry_run) {
     //std::clog << "working on factory for " << category

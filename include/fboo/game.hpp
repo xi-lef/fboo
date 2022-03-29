@@ -17,14 +17,11 @@ public:
 
     auto get_items() const { return items; }  // For debugging.
     int has_item(const std::string &name) const;
-    bool has_ingredient(const Ingredient &ingredient) const;
-    bool has_items(const ItemList &list) const;
+    bool has_items(const ItemCount &list) const;
     void add_item(const std::string &name, int amount = 1);
-    void add_ingredient(const Ingredient &ingredient);
-    void add_items(const ItemList &list);
+    void add_items(const ItemCount &list);
     void remove_item(const std::string &name, int amount = 1);
-    void remove_ingredient(const Ingredient &ingredient);
-    void remove_items(const ItemList &list);
+    void remove_items(const ItemCount &list);
 
     bool is_unlocked(const Recipe &recipe) const;
     bool is_unlocked(const Technology &technology) const;
@@ -56,10 +53,12 @@ public:
           all_recipes(all_recipes),
           all_factories(all_factories),
           all_technologies(all_technologies) {
-        for (const Ingredient &i : goal_items) {
-            this->goal_items[i.get_name()] = i.get_amount();
+        for (const auto &[name, amount] : goal_items) {
+            this->goal_items[name] = amount;
         }
-        state.add_items(initial_items);
+        for (const auto &[name, amount] : initial_items) {
+            state.add_item(name, amount);
+        }
     }
 
     long simulate();
@@ -73,7 +72,7 @@ private:
 
     long tick = -1;
     State state;
-    std::unordered_map<std::string, int> goal_items; // TODO just use ItemList?
+    std::unordered_map<std::string, int> goal_items; // TODO rm
     std::deque<std::shared_ptr<Event>> events;
     // TODO mv these two to state?
     std::unordered_map<FactoryIdMap::fid_t, Recipe> active_factories;

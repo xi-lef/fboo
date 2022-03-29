@@ -37,6 +37,9 @@ public:
     explicit Ingredient(std::string name = "", int amount = 0)
         : Item(name), amount(amount) {}
 
+    Ingredient(const std::pair<const std::string, int> &p)
+        : Ingredient(p.first, p.second) {}
+
     // Required for ItemList (below).
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Ingredient, name, amount);
 
@@ -70,25 +73,28 @@ template <size_t I>
 struct tuple_element<I, Ingredient> : tuple_element<I, tuple<string, int>> {};
 }  // namespace std
 
-using ItemList = std::vector<Ingredient>;  // TODO unordered_map
+using ItemList = std::vector<Ingredient>;
+using ItemCount = std::unordered_map<std::string, int>;
 
 class Recipe : public Entity {
 public:
     Recipe(std::string name, std::string category, int energy, bool enabled,
            ItemList ingredients, ItemList products)
-        : Entity(name),
-          category(category),
-          energy(energy),
-          enabled(enabled),
-          ingredients(ingredients),
-          products(products) {}
+        : Entity(name), category(category), energy(energy), enabled(enabled) {
+        for (const auto &[name, amount] : ingredients) {
+            this->ingredients[name] = amount;
+        }
+        for (const auto &[name, amount] : products) {
+            this->products[name] = amount;
+        }
+    }
 
     std::string to_string() const override;
     std::string get_category() const { return category; }
     bool is_enabled() const { return enabled; }
     int get_energy() const { return energy; }
-    const ItemList &get_ingredients() const { return ingredients; }
-    const ItemList &get_products() const { return products; }
+    const ItemCount &get_ingredients() const { return ingredients; }
+    const ItemCount &get_products() const { return products; }
 
     void set_energy(int e) { energy = e; }
     int tick() { return --energy; }
@@ -98,7 +104,7 @@ private:
     // TODO required_energy and [cur,remaining]_energy?
     int energy;  // Amount of ticks to execute the recipe.
     bool enabled;
-    ItemList ingredients, products;
+    ItemCount ingredients, products;
 };
 
 using RecipeMap = std::unordered_map<std::string, Recipe>;
@@ -134,8 +140,11 @@ public:
                ItemList ingredients, std::vector<std::string> unlocked_recipes)
         : Entity(name),
           prerequisites(prerequisites.begin(), prerequisites.end()),
-          ingredients(ingredients),
-          unlocked_recipes(unlocked_recipes.begin(), unlocked_recipes.end()) {}
+          unlocked_recipes(unlocked_recipes.begin(), unlocked_recipes.end()) {
+        for (auto const &[name, amount] : ingredients) {
+            this->ingredients[name] = amount;
+        }
+    }
 
     bool operator==(const Entity &o) const { return name == o.get_name(); }
 
@@ -143,14 +152,14 @@ public:
     const std::unordered_set<std::string> &get_prerequisites() const {
         return prerequisites;
     }
-    const ItemList &get_ingredients() const { return ingredients; }
+    const ItemCount &get_ingredients() const { return ingredients; }
     const std::unordered_set<std::string> &get_unlocked_recipes() const {
         return unlocked_recipes;
     }
 
 private:
     std::unordered_set<std::string> prerequisites;
-    ItemList ingredients;
+    ItemCount ingredients;
     // The only effect in the json-file is "unlock-recipe", so we simplify this
     // part.
     std::unordered_set<std::string> unlocked_recipes;

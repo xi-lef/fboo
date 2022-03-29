@@ -54,34 +54,34 @@ void Order::add_recipe(const Recipe &r, int amount) {
     //std::clog << order.back() << std::endl;
 
     // Update inventory.
-    for (const Ingredient &i : r.get_ingredients()) {
-        state.remove_item(i.get_name(), i.get_amount() * amount);
+    for (const auto &[iname, iamount] : r.get_ingredients()) {
+        state.remove_item(iname, iamount * amount);
     }
-    for (const Ingredient &i : r.get_products()) {
-        state.add_item(i.get_name(), i.get_amount() * amount);
+    for (const auto &[iname, iamount] : r.get_products()) {
+        state.add_item(iname, iamount * amount);
     }
 }
 
 namespace {
-int calc_execution_amount(const Recipe &r,
-                                 const std::string &product_name,
-                                 int product_amount) {
-    auto tmp = std::ranges::find(r.get_products(), product_name,
-                                 &Ingredient::get_name);
-    return std::ceil(1. * product_amount / tmp->get_amount());
+// How many times does r need to be executed to produce product_name
+// product_amount many times?
+int calc_execution_times(const Recipe &r, const std::string &product_name,
+                          int product_amount) {
+    int recipe_amount = r.get_products().at(product_name);
+    return std::ceil(1. * product_amount / recipe_amount);
 }
 
-int calc_ingredient_amount(const Recipe &r,
-                                  const std::string &product_name,
-                                  int product_amount,
-                                  const std::string &ingredient_name) {
+// How many ingredient_name need to be created in order to produce product_name
+// product_amount many times using r?
+int calc_ingredient_amount(const Recipe &r, const std::string &product_name,
+                           int product_amount,
+                           const std::string &ingredient_name) {
     int execution_amount
-        = calc_execution_amount(r, product_name, product_amount);
-    auto tmp = std::ranges::find(r.get_ingredients(), ingredient_name,
-                                 &Ingredient::get_name);
-    return execution_amount * tmp->get_amount();
+        = calc_execution_times(r, product_name, product_amount);
+    int produced_amount = r.get_ingredients().at(ingredient_name);
+    return execution_amount * produced_amount;
 }
-}
+}  // namespace
 
 bool Order::craft_recipe(const Recipe &r, const std::string &name, int amount,
                          std::set<std::string> visited, bool dry_run) {
@@ -97,7 +97,7 @@ bool Order::craft_recipe(const Recipe &r, const std::string &name, int amount,
                                            visited, dry_run);
                     })) {
                 if (!dry_run) {
-                    add_recipe(r, calc_execution_amount(r, name, amount));
+                    add_recipe(r, calc_execution_times(r, name, amount));
                 }
                 creatable_items[name] = &r;
                 return true;
@@ -135,15 +135,9 @@ bool Order::create_item(const std::string &name, int amount,
     auto options
         = all_recipes | std::views::values
           | std::views::filter([&](const Recipe &r) {
-                auto p = r.get_products();
-                return std::ranges::find(p, name, &Ingredient::get_name)
-                       != p.end();
+                return r.get_products().contains(name);
             });
-    // TODO opt?
-    //std::ranges::sort(options, {}, [&](const Recipe &r) { return is_craftable(r); });
 
-    // We need to craft each ingredient separately, going to the cases below for
-    // some (or all) ingredients in the recursive call.
     for (const Recipe &r : options) {
         // std::clog << "trying " << r << std::endl;
         if (craft_recipe(r, name, amount, visited, true)) {

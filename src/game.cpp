@@ -25,13 +25,9 @@ int State::has_item(const std::string &name) const {
     return r->second;
 }
 
-bool State::has_ingredient(const Ingredient &ingredient) const {
-    return has_item(ingredient.get_name()) >= ingredient.get_amount();
-}
-
-bool State::has_items(const ItemList &list) const {
-    for (const Ingredient &i : list) {
-        if (!has_ingredient(i)) {
+bool State::has_items(const ItemCount &list) const {
+    for (const auto &[name, amount] : list) {
+        if (has_item(name) < amount) {
             return false;
         }
     }
@@ -46,13 +42,9 @@ void State::add_item(const std::string &name, int amount) {
     }
 }
 
-void State::add_ingredient(const Ingredient &ingredient) {
-    add_item(ingredient.get_name(), ingredient.get_amount());
-}
-
-void State::add_items(const ItemList &list) {
-    for (const Ingredient &i : list) {
-        add_ingredient(i);
+void State::add_items(const ItemCount &list) {
+    for (const auto &[name, amount] : list) {
+        add_item(name, amount);
     }
 }
 
@@ -60,13 +52,9 @@ void State::remove_item(const std::string &name, int amount) {
     add_item(name, -amount);
 }
 
-void State::remove_ingredient(const Ingredient &ingredient) {
-    remove_item(ingredient.get_name(), ingredient.get_amount());
-}
-
-void State::remove_items(const ItemList &list) {
-    for (const Ingredient &i : list) {
-        remove_ingredient(i);
+void State::remove_items(const ItemCount &list) {
+    for (const auto &[name, amount] : list) {
+        remove_item(name, amount);
     }
 }
 
@@ -175,8 +163,8 @@ void Simulation::advance() {
         std::transform(cur_events.begin(), mid,
                        std::back_inserter(research_events),
                        cast_event<ResearchEvent>);
-        // The VictoryEvent shall never be included in events, so casting the
-        // remaining events to FactoryEvent is safe.
+        // The VictoryEvent is removed in simulate, so casting the remaining
+        // events to FactoryEvent is safe.
         std::transform(mid, cur_events.end(), std::back_inserter(other_events),
                        cast_event<FactoryEvent>);
 
@@ -254,7 +242,7 @@ void Simulation::advance() {
     // Step 10: handle starved factories by starting production if possible.
     for (auto it = starved_factories.begin(); it != starved_factories.end(); ) {
         auto [fid, r] = *it;
-        const ItemList &ings = r.get_ingredients();
+        const ItemCount &ings = r.get_ingredients();
         if (state.has_items(ings)) {
             state.remove_items(ings);
             const Factory *f = factory_id_map[fid];

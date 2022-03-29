@@ -18,7 +18,9 @@ public:
           goal_items(goal_items),
           tick(0),
           state(all_recipes) {
-        state.add_items(initial_items);
+        for (const auto &[name, amount] : initial_items) {
+            state.add_item(name, amount);
+        }
         for (const Factory &f : initial_factories) {
             add_factory(f, true);
         }

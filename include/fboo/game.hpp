@@ -57,7 +57,7 @@ private:
 
     void advance();
 
-    long tick = -1;
+    long tick = BuildEvent::initial;
     State state;
     std::deque<std::shared_ptr<Event>> events;
     std::unordered_map<FactoryIdMap::fid_t, Recipe> active_factories;

@@ -59,6 +59,7 @@ protected:
 class BuildEvent : public FactoryEvent {
 public:
     inline static std::string type = "build-factory-event";
+    static constexpr int initial = -1;
 
     BuildEvent(long timestamp, std::string type, std::string name,
                FactoryIdMap::fid_t factory_id)

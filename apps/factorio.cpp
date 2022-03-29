@@ -86,8 +86,9 @@ auto init_entities() {
 
     EventList events;
     for (const auto &[_, v] : target["initial-factories"].items()) {
-        events.push_back(std::make_shared<BuildEvent>(
-            -1, v["factory-type"], v["factory-name"], v["factory-id"]));
+        events.push_back(
+            std::make_shared<BuildEvent>(BuildEvent::initial, v["factory-type"],
+                                         v["factory-name"], v["factory-id"]));
     }
 
     events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
@@ -114,8 +115,9 @@ auto init_entities() {
 
     EventList events;
     for (const auto &[_, v] : target["initial-factories"].items()) {
-        events.push_back(std::make_shared<BuildEvent>(
-            -1, v["factory-type"], v["factory-name"], v["factory-id"]));
+        events.push_back(
+            std::make_shared<BuildEvent>(BuildEvent::initial, v["factory-type"],
+                                         v["factory-name"], v["factory-id"]));
     }
 
     events.push_back(std::make_shared<StartEvent>(0, 0, "coal"));
@@ -164,8 +166,9 @@ int main(int argc, char *argv[]) {
     std::vector<Factory> initial_factories;
     for (const auto &[_, v] : target["initial-factories"].items()) {
         initial_factories.push_back(factories.at(v["factory-type"]));
-        events.push_back(std::make_shared<BuildEvent>(
-            -1, v["factory-type"], v["factory-name"], v["factory-id"]));
+        events.push_back(
+            std::make_shared<BuildEvent>(BuildEvent::initial, v["factory-type"],
+                                         v["factory-name"], v["factory-id"]));
     }
 
     Order order(recipes, factories, technologies, initial_factories,

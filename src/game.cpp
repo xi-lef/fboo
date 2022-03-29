@@ -105,10 +105,9 @@ long Simulation::simulate() {
 
     std::ranges::sort(events, {}, &Event::get_timestamp);
 
-    // Initialization: execute all (Build)Events with timestamp -1.
-    // TODO use special value instead of -1
+    // Initialization: execute all (Build)Events with the initial timestamp.
     //std::clog << "tick -1: initializing factories" << std::endl;
-    while (!events.empty() && events.front()->get_timestamp() == -1) {
+    while (!events.empty() && events.front()->get_timestamp() == tick) {
         build_factory(dynamic_cast<const BuildEvent *>(events.front().get()),
                       false);
         events.pop_front();

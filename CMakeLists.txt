@@ -17,6 +17,8 @@ add_compile_options(-Wall -Wextra -pedantic)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
 add_subdirectory(apps)

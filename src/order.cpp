@@ -25,7 +25,9 @@ fid_t Order::add_factory(const Factory &f, bool init, fid_t fid) {
     for (const std::string &s : f.get_crafting_categories()) {
         craftable_categories.insert(s);
     }
-    state.build_factory(&f, !init);
+    if (!init) {
+        state.remove_item(f.get_name());
+    }
 
     return fid;
 }

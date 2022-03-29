@@ -75,22 +75,6 @@ void State::unlock_technology(const Technology &technology,
     }
 }
 
-// TODO semantic with arg is weird, copied in build but deleted in destroy?
-const Factory *State::build_factory(const Factory *f, bool consume) {
-    if (consume) {
-        remove_item(f->get_name());
-    }
-    // TODO maybe no new but instead multiset? or just vector...
-    //factories.insert(new Factory(*f));
-    return f;
-}
-
-void State::destroy_factory(const Factory *f) {
-    //factories.erase(f);
-    add_item(f->get_name());
-    //delete f; // TODO bad, the new'd factory is never returned
-}
-
 void Simulation::cancel_recipe(fid_t fid) {
     auto search = active_factories.find(fid);
     if (search != active_factories.end()) {
@@ -102,10 +86,12 @@ void Simulation::cancel_recipe(fid_t fid) {
 }
 
 void Simulation::build_factory(const BuildEvent *e, bool consume) {
-    const Factory *f
-        = state.build_factory(&all_factories.at(e->get_factory_type()), consume);
+    const Factory &f = all_factories.at(e->get_factory_type());
+    if (consume) {
+        state.remove_item(f.get_name());
+    }
     //std::clog << "building " << f << std::endl;
-    factory_id_map.insert(f, e->get_factory_id());
+    factory_id_map.insert(&f, e->get_factory_id());
 }
 
 long Simulation::simulate() {
@@ -128,8 +114,6 @@ long Simulation::simulate() {
         events.pop_front();
     }
 
-    //std::clog << "goal_items: " << goal_items << std::endl << std::endl;
-
     while (tick < victory_tick) {
         advance();
 
@@ -138,7 +122,7 @@ long Simulation::simulate() {
     }
 
     //std::clog << "done in tick " << tick << ", items: " << state.get_items()
-    //          << ", goal_items: " << goal_items << std::endl;
+    //          << std::endl;
     return tick;
 }
 
@@ -212,7 +196,7 @@ void Simulation::advance() {
         fid_t fid = e->get_factory_id();
         //std::clog << "factory " << fid << ": destroying" << std::endl;
         cancel_recipe(fid);
-        state.destroy_factory(factory_id_map.erase(fid));
+        state.add_item(factory_id_map.erase(fid)->get_name());
     }
 
     // Step 7: handle victory event. This is handled in simulate via the

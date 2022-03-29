@@ -96,8 +96,8 @@ auto init_entities() {
     std::clog << events << std::endl;
 
     const auto [items, recipes, factories, technologies] = init_entities();
-    game::Simulation sim(items, recipes, factories, technologies, events,
-                         goal_items, initial_items);
+    game::Simulation sim(recipes, factories, technologies, events,
+                         initial_items);
     long tick = sim.simulate();
     if (tick != 60) {
         std::cerr << "challenge 1 failed, got tick " << tick << std::endl;
@@ -130,8 +130,8 @@ auto init_entities() {
     std::clog << events << std::endl;
 
     const auto [items, recipes, factories, technologies] = init_entities();
-    game::Simulation sim(items, recipes, factories, technologies, events,
-                         goal_items, initial_items);
+    game::Simulation sim(recipes, factories, technologies, events,
+                         initial_items);
     long tick = sim.simulate();
     if (tick != 6600) {
         std::cerr << "challenge 2 failed, got tick " << tick << std::endl;
@@ -175,8 +175,8 @@ int main(int argc, char *argv[]) {
     std::cout << json(solution_events) << std::endl;
 
     if (argc == 3) {
-        game::Simulation sim(items, recipes, factories, technologies, events,
-                             goal_items, initial_items);
+        game::Simulation sim(recipes, factories, technologies, events,
+                             initial_items);
         sim.simulate();
     }
 }

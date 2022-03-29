@@ -136,13 +136,19 @@ bool Order::create_item(const std::string &name, int amount,
         = all_recipes | std::views::values
           | std::views::filter([&](const Recipe &r) {
                 return r.get_products().contains(name);
-            });
+            })
+          | std::views::transform([](const Recipe &r) { return &r; });
+    std::vector<const Recipe *> better_options(options.begin(), options.end());
+    std::ranges::sort(better_options, {}, [&](const Recipe *r) {
+        // TODO opt: I don't think this makes sense, but it improves results...
+        return is_factory_available(*r);
+    });
 
-    for (const Recipe &r : options) {
+    for (const Recipe *r : better_options) {
         // std::clog << "trying " << r << std::endl;
-        if (craft_recipe(r, name, amount, visited, true)) {
+        if (craft_recipe(*r, name, amount, visited, true)) {
             if (!dry_run) {
-                craft_recipe(r, name, amount, visited, false);
+                craft_recipe(*r, name, amount, visited, false);
             }
             return true;
         }

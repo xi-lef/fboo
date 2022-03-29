@@ -78,9 +78,12 @@ using ItemCount = std::unordered_map<std::string, int>;
 
 class Recipe : public Entity {
 public:
-    Recipe(std::string name, std::string category, int energy, bool enabled,
-           ItemList ingredients, ItemList products)
-        : Entity(name), category(category), energy(energy), enabled(enabled) {
+    Recipe(std::string name, std::string category, int required_energy,
+           bool enabled, ItemList ingredients, ItemList products)
+        : Entity(name),
+          category(category),
+          required_energy(required_energy),
+          enabled(enabled) {
         for (const auto &[name, amount] : ingredients) {
             this->ingredients[name] = amount;
         }
@@ -92,17 +95,17 @@ public:
     std::string to_string() const override;
     std::string get_category() const { return category; }
     bool is_enabled() const { return enabled; }
-    int get_energy() const { return energy; }
+    int get_required_energy() const { return required_energy; }
     const ItemCount &get_ingredients() const { return ingredients; }
     const ItemCount &get_products() const { return products; }
 
-    void set_energy(int e) { energy = e; }
-    int tick() { return --energy; }
+    void reset_energy() { remaining_energy = required_energy; }
+    int tick() { return --remaining_energy; }
 
 private:
     std::string category;
-    // TODO required_energy and [cur,remaining]_energy?
-    int energy;  // Amount of ticks to execute the recipe.
+    int required_energy;  // Amount of ticks to execute the recipe.
+    int remaining_energy = 0;
     bool enabled;
     ItemCount ingredients, products;
 };
@@ -120,7 +123,7 @@ public:
     std::string to_string() const override;
     double get_crafting_speed() const { return crafting_speed; }
     int calc_ticks(const Recipe &r) const {
-        return std::ceil(r.get_energy() / get_crafting_speed());
+        return std::ceil(r.get_required_energy() / get_crafting_speed());
     }
     const std::set<std::string> &get_crafting_categories() const {
         return crafting_categories;

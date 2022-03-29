@@ -216,25 +216,24 @@ void Simulation::advance() {
         if (!state.is_unlocked(all_recipes.at(e->get_recipe()))) {
             throw std::logic_error("recipe not yet unlocked");
         }
-        Recipe r = all_recipes.at(e->get_recipe());
-        //std::clog << "factory " << fid << ": commencing " << r << std::endl;
-        // Use insert_or_assign to potentially overwrite a recipe that was
-        // inserted for fid in step 3.
-        starved_factories.insert_or_assign(fid, r);  // Gather for step 10.
+        // std::clog << "factory " << fid << ": commencing " << r << std::endl;
+        // Gather for step 10. Use insert_or_assign to potentially overwrite a
+        // recipe that was inserted for fid in step 3.
+        starved_factories.insert_or_assign(fid,
+                                           all_recipes.at(e->get_recipe()));
     }
 
     // Step 10: handle starved factories by starting production if possible.
     for (auto it = starved_factories.begin(); it != starved_factories.end(); ) {
-        auto [fid, r] = *it;
+        auto [fid, r] = *it;  // Copy r, its energy is reset below.
         const ItemCount &ings = r.get_ingredients();
         if (state.has_items(ings)) {
             state.remove_items(ings);
-            const Factory *f = factory_id_map[fid];
-            // r.energy is 0, so we need to get the actual required energy from
-            // all_recipes. TODO meh
-            r.set_energy(f->calc_ticks(all_recipes.at(r.get_name())));
+            // r.energy is 0, so we need to reset the energy before starting.
+            r.reset_energy();
             //std::clog << "factory " << fid << ": starting " << r << std::endl;
             active_factories.insert({fid, r});
+
             it = starved_factories.erase(it);
         } else {
             ++it;

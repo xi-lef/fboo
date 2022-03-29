@@ -1,6 +1,5 @@
 #pragma once
 #include <nlohmann/json.hpp>
-#include <set>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
@@ -115,7 +114,7 @@ using RecipeMap = std::unordered_map<std::string, Recipe>;
 class Factory : public Entity {
 public:
     Factory(std::string name, double crafting_speed,
-            std::set<std::string> crafting_categories)
+            std::unordered_set<std::string> crafting_categories)
         : Entity(name),
           crafting_speed(crafting_speed),
           crafting_categories(crafting_categories) {}
@@ -125,14 +124,13 @@ public:
     int calc_ticks(const Recipe &r) const {
         return std::ceil(r.get_required_energy() / get_crafting_speed());
     }
-    const std::set<std::string> &get_crafting_categories() const {
+    const std::unordered_set<std::string> &get_crafting_categories() const {
         return crafting_categories;
     }
 
 private:
     double crafting_speed;
-    std::set<std::string> crafting_categories; // TODO unordered?
-    // TODO Recipe *executing_recipe ?
+    std::unordered_set<std::string> crafting_categories;
 };
 
 using FactoryMap = std::unordered_map<std::string, Factory>;

@@ -2,7 +2,6 @@
 #include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <unordered_map>
 
 #include "fboo/entity.hpp"
 #include "fboo/event.hpp"

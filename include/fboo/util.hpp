@@ -3,14 +3,13 @@
 #include <map>
 #include <memory>
 #include <ostream>
-#include <ranges>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-#include "entity.hpp"
-#include "event.hpp"
+class Entity;
+class Event;
 
 template <class T>
 requires requires(T t) {

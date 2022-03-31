@@ -14,7 +14,8 @@ class Order {
 public:
     Order(const RecipeMap &all_recipes, const FactoryMap &all_factories,
           const TechnologyMap &all_technologies,
-          const std::vector<Factory> &initial_factories,
+          const std::unordered_map<FactoryIdMap::fid_t, const Factory *>
+              &initial_factories,
           const ItemList &initial_items, const ItemList &goal_items)
         : all_recipes(all_recipes),
           all_factories(all_factories),
@@ -25,8 +26,8 @@ public:
         for (const auto &[name, amount] : initial_items) {
             state.add_item(name, amount);
         }
-        for (const Factory &f : initial_factories) {
-            add_factory(f, true);
+        for (const auto &[fid, factory] : initial_factories) {
+            add_factory(*factory, fid);
         }
     }
 
@@ -35,8 +36,8 @@ public:
 private:
     bool is_factory_available(const Recipe &r);
 
-    FactoryIdMap::fid_t add_factory(const Factory &f, bool init = false,
-                                    FactoryIdMap::fid_t fid = 0);
+    FactoryIdMap::fid_t add_factory(const Factory &f, FactoryIdMap::fid_t fid);
+    FactoryIdMap::fid_t add_factory(const Factory &f);
     void add_technology(const Technology &t);
     void add_recipe(const Recipe &r, int amount = 1);
 

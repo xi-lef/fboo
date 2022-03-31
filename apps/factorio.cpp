@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
     auto goal_items = target["goal-items"].get<ItemList>();
 
     EventList events;
-    std::vector<Factory> initial_factories;
+    std::unordered_map<FactoryIdMap::fid_t, const Factory *> initial_factories;
     for (const auto &[_, v] : target["initial-factories"].items()) {
-        initial_factories.push_back(factories.at(v["factory-type"]));
+        initial_factories[v["factory-id"]] = &factories.at(v["factory-type"]);
         events.push_back(
             std::make_shared<BuildEvent>(BuildEvent::initial, v["factory-type"],
                                          v["factory-name"], v["factory-id"]));

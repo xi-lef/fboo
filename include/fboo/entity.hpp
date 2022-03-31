@@ -172,6 +172,8 @@ class FactoryIdMap {
 public:
     using fid_t = int;
 
+    fid_t get_next_fid() const { return count; }
+
     fid_t insert(const Factory *f) {
         insert_checked(f, count);
         return count++;

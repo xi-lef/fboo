@@ -11,24 +11,23 @@ bool Order::is_factory_available(const Recipe &r) {
     return craftable_categories.contains(r.get_category());
 }
 
-fid_t Order::add_factory(const Factory &f, bool init, fid_t fid) {
-    if (init) {
-        fid_map.insert(&f, fid);
-    } else {
-        fid = fid_map.insert(&f);
-
-        // BuildEvents are handled before StartEvents, so we don't need to
-        // increment tick here.
-        order.push_back(std::make_shared<BuildEvent>(tick, f, fid));
-        //std::clog << "add_factory: " << order.back() << std::endl;
-    }
+fid_t Order::add_factory(const Factory &f, fid_t fid) {
+    //std::clog << "add_factory: " << order.back() << std::endl;
     for (const std::string &s : f.get_crafting_categories()) {
         craftable_categories.insert(s);
     }
-    if (!init) {
-        state.remove_item(f.get_name());
-    }
 
+    fid_map.insert(&f, fid);
+    return fid;
+}
+
+FactoryIdMap::fid_t Order::add_factory(const Factory &f) {
+    fid_t fid = add_factory(f, fid_map.get_next_fid());
+    state.remove_item(f.get_name());
+
+    // BuildEvents are handled before StartEvents, so we don't need to
+    // increment tick here.
+    order.push_back(std::make_shared<BuildEvent>(tick, f, fid));
     return fid;
 }
 

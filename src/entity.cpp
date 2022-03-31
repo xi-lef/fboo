@@ -4,6 +4,10 @@
 
 #include "util.hpp"
 
+void Recipe::set_energy(const Factory &f) {
+    remaining_energy = f.calc_ticks(*this);
+}
+
 std::string Item::to_string() const {
     std::ostringstream ss;
     ss << name << " (" << type << ")";

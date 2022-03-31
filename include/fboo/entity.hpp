@@ -98,7 +98,7 @@ public:
     const ItemCount &get_ingredients() const { return ingredients; }
     const ItemCount &get_products() const { return products; }
 
-    void reset_energy() { remaining_energy = required_energy; }
+    void set_energy(const class Factory &f);
     int tick() { return --remaining_energy; }
 
 private:

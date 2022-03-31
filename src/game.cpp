@@ -228,8 +228,8 @@ void Simulation::advance() {
         const ItemCount &ings = r.get_ingredients();
         if (state.has_items(ings)) {
             state.remove_items(ings);
-            // r.energy is 0, so we need to reset the energy before starting.
-            r.reset_energy();
+            // r.energy is 0, so we need to set the energy before starting.
+            r.set_energy(*factory_id_map[fid]);
             //std::clog << "factory " << fid << ": starting " << r << std::endl;
             active_factories.insert({fid, r});
 

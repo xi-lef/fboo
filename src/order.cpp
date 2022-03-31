@@ -65,7 +65,7 @@ namespace {
 int calc_execution_times(const Recipe &r, const std::string &product_name,
                           int product_amount) {
     int recipe_amount = r.get_products().at(product_name);
-    return std::ceil(1. * product_amount / recipe_amount);
+    return std::ceil(static_cast<double>(product_amount) / recipe_amount);
 }
 
 // How many ingredient_name need to be created in order to produce product_name

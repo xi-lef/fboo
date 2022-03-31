@@ -4,7 +4,6 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 
 #include "entity.hpp"
 #include "event.hpp"
@@ -39,20 +38,18 @@ private:
     FactoryIdMap::fid_t add_factory(const Factory &f, FactoryIdMap::fid_t fid);
     FactoryIdMap::fid_t add_factory(const Factory &f);
     void add_technology(const Technology &t);
-    void add_recipe(const Recipe &r, int amount = 1);
+    void add_recipe(const Recipe &r, int amount);
 
     bool craft_recipe(const Recipe &r, const std::string &name, int amount,
-                      std::set<std::string> visited = {}, bool dry_run = false);
+                      std::set<std::string> visited, bool dry_run);
     bool create_item(const std::string &name, int amount,
                      std::set<std::string> visited = {}, bool dry_run = false);
     bool create_factory(const std::string &category,
-                        std::set<std::string> visited = {},
-                        bool dry_run = false);
-    bool create_technology(const Recipe &r, std::set<std::string> visited = {},
-                           bool dry_run = false);
-    bool create_technology(const Technology &t,
-                           std::set<std::string> visited = {},
-                           bool dry_run = false);
+                        std::set<std::string> visited, bool dry_run);
+    bool create_technology(const Recipe &r, std::set<std::string> visited,
+                           bool dry_run);
+    bool create_technology(const Technology &t, std::set<std::string> visited,
+                           bool dry_run);
 
     const RecipeMap &all_recipes;
     const FactoryMap &all_factories;
